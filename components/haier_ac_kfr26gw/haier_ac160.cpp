@@ -47,8 +47,6 @@ void ClimateIRHaierAC160::setup_ir_cmd() {
             ac_->setMode(kHaierAcYrw02Fan);
         }
   
-        ac_->setTemp((uint8_t)this->target_temperature);
-  
         if (this->fan_mode == climate::CLIMATE_FAN_AUTO) {
             ac_->setFan(kHaierAcYrw02FanAuto);
         } else if (this->fan_mode == climate::CLIMATE_FAN_LOW) {
@@ -65,9 +63,13 @@ void ClimateIRHaierAC160::setup_ir_cmd() {
             ac_->setSwingV(kHaierAc160SwingVAuto);
         }
   
-        ac_->setSleep(this->preset == climate::CLIMATE_PRESET_SLEEP);
-        ac_->setHealth(this->preset == climate::CLIMATE_PRESET_COMFORT);
-        ac_->setTurbo(this->preset == climate::CLIMATE_PRESET_BOOST);
+        ac_->setTemp((uint8_t) this->target_temperature);
+        ac_->setSleep(this->preset_ == HaierAC160Preset::PRESET_SLEEP);
+        ac_->setHealth(this->preset_ == HaierAC160Preset::PRESET_COMFORT);
+        ac_->setTurbo(this->preset_ == HaierAC160Preset::PRESET_BOOST);
+        ac_->setClean(this->preset_ == HaierAC160Preset::PRESET_SELF_CLEAN);
+        ac_->setLightToggle(this->light_toggle_);
+        ac_->setAuxHeating(this->aux_heating_);
     }
 }
 
@@ -97,6 +99,8 @@ climate::ClimateTraits ClimateIRHaierAC160::traits() {
         climate::CLIMATE_PRESET_COMFORT,
         climate::CLIMATE_PRESET_BOOST
     });
+    if (!this->supported_custom_presets_.empty())
+        traits.set_supported_custom_presets(this->supported_custom_presets_);
 
     traits.set_visual_max_temperature(HAIER_AC_MAX_TEMP);
     traits.set_visual_min_temperature(HAIER_AC_MIN_TEMP);
@@ -119,7 +123,9 @@ void ClimateIRHaierAC160::control(const climate::ClimateCall &call) {
         this->swing_mode = *call.get_swing_mode();
 
     if (call.get_preset().has_value())
-        this->preset = *call.get_preset();
+        this->preset_ = Converters::to_haier_preset(call.get_preset().value());
+    else if (call.has_custom_preset())
+        this->preset_ = Converters::to_haier_preset(call.get_custom_preset());
 
     this->setup_ir_cmd();
     ac_->send();
