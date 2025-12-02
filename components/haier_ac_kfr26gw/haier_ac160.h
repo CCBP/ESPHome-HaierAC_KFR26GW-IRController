@@ -9,7 +9,7 @@
 #include "ir_Haier.h"
 
 namespace esphome {
-namespace haier_ac_kfr26gw {
+namespace haier_ac160 {
 
 class ClimateIRHaierAC160 : public climate::Climate {
     public:
@@ -36,5 +36,5 @@ class ClimateIRHaierAC160 : public climate::Climate {
 
 };
 
-}  // namespace haier_ac_kfr26gw
+}  // namespace haier_ac160
 }  // namespace esphome

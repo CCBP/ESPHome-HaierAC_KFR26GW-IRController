@@ -1,7 +1,7 @@
 #include "haier_ac160.h"
 
 namespace esphome {
-namespace haier_ac_kfr26gw {
+namespace haier_ac160 {
 
 static const char *const TAG = "climate.haier_ac160";
 
@@ -136,5 +136,5 @@ void ClimateIRHaierAC160::control(const climate::ClimateCall &call) {
     ESP_LOGD("DEBUG", "  %s\n", ac_->toString().c_str());
 }
 
-}  // namespace haier_ac_kfr26gw
+}  // namespace haier_ac160
 }  // namespace esphome

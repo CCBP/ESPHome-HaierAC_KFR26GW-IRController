@@ -3,7 +3,7 @@
 #include "esphome/components/climate/climate.h"
 
 namespace esphome {
-namespace haier_ac_kfr26gw {
+namespace haier_ac160 {
 
 enum HaierAC160Preset : uint8_t {
     PRESET_NONE,
@@ -24,5 +24,5 @@ class Converters {
         static HaierAC160Preset to_haier_preset(const char *preset);
 };
 
-} // namespace haier_ac_kfr26gw
+} // namespace haier_ac160
 } // namespace esphome

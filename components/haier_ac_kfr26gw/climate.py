@@ -16,7 +16,7 @@ from esphome import pins
 
 AUTO_LOAD = ["climate"]
 
-haier_ac160_ns = cg.esphome_ns.namespace("haier_ac_kfr26gw")
+haier_ac160_ns = cg.esphome_ns.namespace("haier_ac160")
 ClimateIRHaierAC160 = haier_ac160_ns.class_(
         "ClimateIRHaierAC160", climate.Climate)
 Capabilities = haier_ac160_ns.namespace("Constants")

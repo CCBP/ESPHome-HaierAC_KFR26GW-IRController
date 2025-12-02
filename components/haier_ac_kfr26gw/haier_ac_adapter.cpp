@@ -1,7 +1,7 @@
 #include "haier_ac_adapter.h"
 
 namespace esphome {
-namespace haier_ac_kfr26gw {
+namespace haier_ac160 {
 
 const char *const Constants::SELF_CLEAN = "self clean";
 
@@ -24,5 +24,5 @@ HaierAC160Preset Converters::to_haier_preset(const char *preset) {
     return HaierAC160Preset::PRESET_NONE;
 }
 
-} // namespace haier_ac_kfr26gw
+} // namespace haier_ac160
 } // namespace esphome
