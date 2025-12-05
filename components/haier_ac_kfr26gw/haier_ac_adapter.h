@@ -13,7 +13,7 @@ enum HaierAC160Preset : uint8_t {
     PRESET_SELF_CLEAN,
 };
 
-class Constants {
+class HaierAC160PresetStr {
     public:
         static const char *const SELF_CLEAN;
 };

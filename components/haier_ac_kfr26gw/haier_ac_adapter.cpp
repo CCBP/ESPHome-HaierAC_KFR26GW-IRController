@@ -3,7 +3,7 @@
 namespace esphome {
 namespace haier_ac160 {
 
-const char *const Constants::SELF_CLEAN = "self clean";
+const char *const HaierAC160PresetStr::SELF_CLEAN = "自清洁";
 
 HaierAC160Preset Converters::to_haier_preset(climate::ClimatePreset preset) {
     switch (preset) {
@@ -19,7 +19,7 @@ HaierAC160Preset Converters::to_haier_preset(climate::ClimatePreset preset) {
 }
 
 HaierAC160Preset Converters::to_haier_preset(const char *preset) {
-    if (strcmp(preset, Constants::SELF_CLEAN) == 0)
+    if (strcmp(preset, HaierAC160PresetStr::SELF_CLEAN) == 0)
         return HaierAC160Preset::PRESET_SELF_CLEAN;
     return HaierAC160Preset::PRESET_NONE;
 }

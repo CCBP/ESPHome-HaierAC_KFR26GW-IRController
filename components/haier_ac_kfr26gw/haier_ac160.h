@@ -15,7 +15,10 @@ class ClimateIRHaierAC160 : public climate::Climate {
     public:
         ClimateIRHaierAC160() : climate::Climate() {}
 
-        void init(uint16_t pin, const bool inverted = false);
+        void init(uint16_t pin, const bool recovery = true,
+            const bool inverted = false);
+
+        void perform();
 
         void set_custom_presets(std::initializer_list<const char *> presets)
             { this->supported_custom_presets_ = presets; }
@@ -25,9 +28,10 @@ class ClimateIRHaierAC160 : public climate::Climate {
     protected:
         IRHaierAC160 *ac_{nullptr};
         std::vector<const char *> supported_custom_presets_{};
-        HaierAC160Preset preset_;
-        bool light_toggle_;
-        bool aux_heating_;
+        HaierAC160Preset preset_{HaierAC160Preset::PRESET_NONE};
+        bool light_toggle_{true};
+        bool aux_heating_{false};
+        bool sleep_{false};
 
         void setup_ir_cmd();
 
