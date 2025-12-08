@@ -21,8 +21,6 @@ void ClimateIRHaierAC160::init(uint16_t pin,
         this->fan_mode = climate::CLIMATE_FAN_AUTO;
         this->swing_mode = climate::CLIMATE_SWING_OFF;
         this->preset = climate::CLIMATE_PRESET_NONE;
-        this->light_toggle_ = true;
-        this->aux_heating_ = false;
     }
 
     if (isnan(this->target_temperature)) {
@@ -83,20 +81,15 @@ void ClimateIRHaierAC160::setup_ir_cmd() {
         if (state != ac_->getHealth()) ac_->setHealth(state);
         state = this->preset_ == HaierAC160Preset::PRESET_SELF_CLEAN;
         if (state != ac_->getClean()) ac_->setClean(state);
-        if (this->aux_heating_ != ac_->getAuxHeating())
-            ac_->setAuxHeating(this->aux_heating_);
-        if (this->aux_heating_ != ac_->getLightToggle())
-            ac_->setLightToggle(this->light_toggle_);
         if (this->sleep_ != ac_->getSleep())
             ac_->setSleep(this->sleep_);
         // Turbo and Quiet only availible in Heat/Cool mode
-        switch (this->mode) {
-            case climate::CLIMATE_MODE_COOL:
-            case climate::CLIMATE_MODE_HEAT:
-                state = this->preset_ == HaierAC160Preset::PRESET_BOOST;
-                if (state != ac_->getTurbo()) ac_->setTurbo(state);
-                if (this->fan_mode == climate::CLIMATE_FAN_QUIET)
-                    ac_->setQuiet(true);
+        if ((this->mode == climate::CLIMATE_MODE_COOL) ||
+            (this->mode == climate::CLIMATE_MODE_HEAT)) {
+            state = this->preset_ == HaierAC160Preset::PRESET_BOOST;
+            if (state != ac_->getTurbo()) ac_->setTurbo(state);
+            if (this->fan_mode == climate::CLIMATE_FAN_QUIET)
+                ac_->setQuiet(true);
         }
     }
 }
@@ -166,6 +159,44 @@ void ClimateIRHaierAC160::control(const climate::ClimateCall &call) {
 
     this->perform();
     this->publish_state();
+}
+
+void ClimateIRHaierAC160::display_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Display switch state changed to %s",
+        state ? "ON" : "OFF");
+    if (state != ac_->getLightToggle()) {
+        ac_->setLightToggle(state);
+        if (ac_->getPower())
+            ac_->send();
+    }
+}
+
+void ClimateIRHaierAC160::set_display_switch(ClimateIRHaierAC160Switch *display_sw) {
+    this->display_sw_ = display_sw;
+    this->display_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->display_switch_handler(state);
+        }
+    );
+}
+
+void ClimateIRHaierAC160::aux_heating_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Auxiliary Heating switch state changed to %s",
+        state ? "ON" : "OFF");
+    if (state != ac_->getAuxHeating()) {
+        ac_->setAuxHeating(state);
+        if (ac_->getPower())
+            ac_->send();
+    }
+}
+
+void ClimateIRHaierAC160::set_aux_heating_switch(ClimateIRHaierAC160Switch *aux_heating_sw) {
+    this->aux_heating_sw_ = aux_heating_sw;
+    this->aux_heating_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->aux_heating_switch_handler(state);
+        }
+    );
 }
 
 }  // namespace haier_ac160
