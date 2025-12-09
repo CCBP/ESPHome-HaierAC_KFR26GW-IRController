@@ -216,5 +216,33 @@ void ClimateIRHaierAC160::set_swing_mode_select(
     );
 }
 
+void ClimateIRHaierAC160::timer_hour_select_handler(uint8_t hour) {
+    ESP_LOGD(TAG, "Timer set to hour %d", hour);
+}
+
+void ClimateIRHaierAC160::set_timer_hour_select(
+        ClimateIRHaierAC160Select<uint8_t> *timer_hour_se) {
+    this->timer_hour_se_ = timer_hour_se;
+    this->timer_hour_se_->set_callback_handler(
+        [this](uint8_t hour) -> void {
+            this->timer_hour_select_handler(hour);
+        }
+    );
+}
+
+void ClimateIRHaierAC160::timer_minute_select_handler(uint8_t minute) {
+    ESP_LOGD(TAG, "Timer set to minute %d", minute);
+}
+
+void ClimateIRHaierAC160::set_timer_minute_select(
+        ClimateIRHaierAC160Select<uint8_t> *timer_minute_se) {
+    this->timer_minute_se_ = timer_minute_se;
+    this->timer_minute_se_->set_callback_handler(
+        [this](uint8_t minute) -> void {
+            this->timer_minute_select_handler(minute);
+        }
+    );
+}
+
 }  // namespace haier_ac160
 }  // namespace esphome

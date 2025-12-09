@@ -29,6 +29,10 @@ class ClimateIRHaierAC160 : public climate::Climate {
 
         void set_swing_mode_select(
                 ClimateIRHaierAC160Select<HaierAC160SwingMode> *swing_mode_se);
+        void set_timer_hour_select(
+                ClimateIRHaierAC160Select<uint8_t> *timer_hour_se);
+        void set_timer_minute_select(
+                ClimateIRHaierAC160Select<uint8_t> *timer_minute_se);
 
     protected:
         IRHaierAC160 *ac_{nullptr};
@@ -40,11 +44,15 @@ class ClimateIRHaierAC160 : public climate::Climate {
         ClimateIRHaierAC160Switch *aux_heating_sw_{nullptr};
 
         ClimateIRHaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
+        ClimateIRHaierAC160Select<uint8_t> *timer_hour_se_{nullptr};
+        ClimateIRHaierAC160Select<uint8_t> *timer_minute_se_{nullptr};
 
         void display_switch_handler(bool state);
         void aux_heating_switch_handler(bool state);
 
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
+        void timer_hour_select_handler(uint8_t hour);
+        void timer_minute_select_handler(uint8_t minute);
 
         void setup_ir_cmd();
 

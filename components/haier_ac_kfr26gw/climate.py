@@ -9,6 +9,8 @@ from esphome.const import (
     CONF_CUSTOM_PRESETS,
     CONF_RESTORE_STATE,
     CONF_OPTIONS,
+    CONF_INITIAL_VALUE,
+    CONF_STEP,
     PLATFORM_ESP32,
     PLATFORM_ESP8266,
 )
@@ -20,6 +22,10 @@ AUTO_LOAD = ["climate", "switch", "select"]
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
+CONF_TIMER_HOUR_SELECT = "timer_hour_select"
+CONF_TIMER_MINUTE_SELECT = "timer_minute_select"
+CONF_MIN = "min"
+CONF_MAX = "max"
 
 haier_ac160_ns = cg.esphome_ns.namespace("haier_ac160")
 ClimateIRHaierAC160 = haier_ac160_ns.class_(
@@ -47,6 +53,24 @@ SWING_MODE = {
     "Middle"    : SwingMode.SWING_MIDDLE,
     "Low"       : SwingMode.SWING_LOW,
     "Lowest"    : SwingMode.SWING_LOWEST,
+}
+
+CONFIG_TIMER_HOUR_SCHEMA = {
+    cv.Optional(CONF_MIN, default=0): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_MAX, default=23): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
+    cv.Optional(CONF_OPTIONS):
+        cv.invalid(f"Do not set options manually for {CONF_TIMER_HOUR_SELECT}"),
+}
+
+CONFIG_TIMER_MINUTE_SCHEMA = {
+    cv.Optional(CONF_MIN, default=0): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_MAX, default=59): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
+    cv.Optional(CONF_OPTIONS):
+        cv.invalid(f"Do not set options manually for {CONF_TIMER_MINUTE_SELECT}"),
 }
 
 CONFIG_SCHEMA = cv.All(
@@ -78,7 +102,32 @@ CONFIG_SCHEMA = cv.All(
                 CONF_SWING_MODE_SELECT,
                 default={ CONF_NAME: "Swing Mode" }
             ): cv.maybe_simple_value(
-                select.select_schema(ClimateIRHaierAC160Select),
+                select.select_schema(
+                    ClimateIRHaierAC160Select
+                ).extend(
+                    {
+                        cv.Optional(CONF_OPTIONS):
+                            cv.invalid(f"Do not set options manually for {CONF_SWING_MODE_SELECT}"),
+                    },
+                ),
+                key=CONF_NAME,
+            ),
+            cv.Optional(
+                CONF_TIMER_HOUR_SELECT,
+                default={ CONF_NAME: "Hour" }
+            ): cv.maybe_simple_value(
+                select.select_schema(
+                    ClimateIRHaierAC160Select
+                ).extend(CONFIG_TIMER_HOUR_SCHEMA),
+                key=CONF_NAME,
+            ),
+            cv.Optional(
+                CONF_TIMER_MINUTE_SELECT,
+                default={ CONF_NAME: "Minute" }
+            ): cv.maybe_simple_value(
+                select.select_schema(
+                    ClimateIRHaierAC160Select
+                ).extend(CONFIG_TIMER_MINUTE_SCHEMA),
                 key=CONF_NAME,
             ),
         }
@@ -86,11 +135,30 @@ CONFIG_SCHEMA = cv.All(
     cv.only_on([PLATFORM_ESP32, PLATFORM_ESP8266]),
 )
 
+def generate_timer_options(config):
+    min_val = config.get(CONF_MIN, 0)
+    max_val = config.get(CONF_MAX, 23 if CONF_TIMER_HOUR_SELECT in config else 59)
+    step = config.get(CONF_STEP, 1)
+
+    options = ["--"]
+    current = min_val
+    while current <= max_val:
+        options.append(f"{current:0>2}")
+        current += step
+
+    if not options:
+        raise cv.invalid("No options generated. Check min, max and step values.")
+
+    return options
+
 async def to_code(config):
     cg.add_library("crankyoldgit/IRremoteESP8266", "2.8.6")
 
     var = cg.new_Pvariable(config[CONF_ID])
     await climate.register_climate(var, config)
+
+    if CONF_CUSTOM_PRESETS in config:
+        cg.add(var.set_custom_presets(config[CONF_CUSTOM_PRESETS]))
 
     display_sw = await switch.new_switch(config[CONF_DISPLAY_SWITCH])
     await cg.register_component(
@@ -114,8 +182,25 @@ async def to_code(config):
     )
     cg.add(var.set_swing_mode_select(swing_mode_select))
     
+    timer_hour_select = await select.new_select(
+        config[CONF_TIMER_HOUR_SELECT],
+        cg.TemplateArguments(cg.uint8),
+        options=generate_timer_options(config[CONF_TIMER_HOUR_SELECT]),
+    )
+    await cg.register_component(
+        timer_hour_select, config[CONF_TIMER_HOUR_SELECT]
+    )
+    cg.add(var.set_timer_hour_select(timer_hour_select))
+    
+    timer_minute_select = await select.new_select(
+        config[CONF_TIMER_MINUTE_SELECT],
+        cg.TemplateArguments(cg.uint8),
+        options=generate_timer_options(config[CONF_TIMER_MINUTE_SELECT]),
+    )
+    await cg.register_component(
+        timer_minute_select, config[CONF_TIMER_MINUTE_SELECT]
+    )
+    cg.add(var.set_timer_minute_select(timer_minute_select))
+    
     cg.add(var.init(config[CONF_PIN],
         config[CONF_RESTORE_STATE], config[CONF_INVERTED]))
-
-    if CONF_CUSTOM_PRESETS in config:
-        cg.add(var.set_custom_presets(config[CONF_CUSTOM_PRESETS]))
