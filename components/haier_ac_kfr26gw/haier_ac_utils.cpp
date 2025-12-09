@@ -4,9 +4,9 @@ namespace esphome {
 namespace haier_ac160 {
 
 void ClimateIRHaierAC160Switch::write_state(bool state) {
-    this->cb_(state);
     // Report state back
-    publish_state(state);
+    this->publish_state(state);
+    if (this->cb_) this->cb_(state);
 }
 
 } // namespace esphome

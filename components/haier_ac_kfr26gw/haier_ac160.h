@@ -23,8 +23,12 @@ class ClimateIRHaierAC160 : public climate::Climate {
 
         void set_custom_presets(std::initializer_list<const char *> presets)
             { this->supported_custom_presets_ = presets; }
+
         void set_display_switch(ClimateIRHaierAC160Switch *display_sw);
         void set_aux_heating_switch(ClimateIRHaierAC160Switch *aux_heating);
+
+        void set_swing_mode_select(
+                ClimateIRHaierAC160Select<HaierAC160SwingMode> *swing_mode_se);
 
     protected:
         IRHaierAC160 *ac_{nullptr};
@@ -35,14 +39,17 @@ class ClimateIRHaierAC160 : public climate::Climate {
         ClimateIRHaierAC160Switch *display_sw_{nullptr};
         ClimateIRHaierAC160Switch *aux_heating_sw_{nullptr};
 
+        ClimateIRHaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
+
         void display_switch_handler(bool state);
         void aux_heating_switch_handler(bool state);
+
+        void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
 
         void setup_ir_cmd();
 
         climate::ClimateTraits traits() override;
         void control(const climate::ClimateCall &call) override;
-
 };
 
 }  // namespace haier_ac160

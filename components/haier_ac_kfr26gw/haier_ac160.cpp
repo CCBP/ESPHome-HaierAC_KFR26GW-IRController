@@ -190,11 +190,28 @@ void ClimateIRHaierAC160::aux_heating_switch_handler(bool state) {
     }
 }
 
-void ClimateIRHaierAC160::set_aux_heating_switch(ClimateIRHaierAC160Switch *aux_heating_sw) {
+void ClimateIRHaierAC160::set_aux_heating_switch(
+        ClimateIRHaierAC160Switch *aux_heating_sw) {
     this->aux_heating_sw_ = aux_heating_sw;
     this->aux_heating_sw_->set_callback_handler(
         [this](bool state) -> void {
             this->aux_heating_switch_handler(state);
+        }
+    );
+}
+
+void ClimateIRHaierAC160::swing_mode_select_handler(
+        HaierAC160SwingMode swing_mode) {
+    ESP_LOGD(TAG, "Swing Mode was selected as %s",
+        get_swing_mode_str(swing_mode));
+}
+
+void ClimateIRHaierAC160::set_swing_mode_select(
+        ClimateIRHaierAC160Select<HaierAC160SwingMode> *swing_mode_se) {
+    this->swing_mode_se_ = swing_mode_se;
+    this->swing_mode_se_->set_callback_handler(
+        [this](HaierAC160SwingMode swing_mode) -> void {
+            this->swing_mode_select_handler(swing_mode);
         }
     );
 }
