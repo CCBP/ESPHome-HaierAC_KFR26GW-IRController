@@ -6,7 +6,7 @@
 namespace esphome {
 namespace haier_ac160 {
 
-class ClimateIRHaierAC160Switch : public switch_::Switch, public Component {
+class HaierAC160Switch : public switch_::Switch, public Component {
     public:
         void set_callback_handler(std::function<void(bool)> cb)
             { this->cb_ = cb; }
@@ -18,7 +18,7 @@ class ClimateIRHaierAC160Switch : public switch_::Switch, public Component {
 };
 
 template<typename EnumT>
-class ClimateIRHaierAC160Select : public select::Select, public Component {
+class HaierAC160Select : public select::Select, public Component {
     public:
         void set_callback_handler(std::function<void(EnumT)> cb)
             { this->cb_ = cb; }
