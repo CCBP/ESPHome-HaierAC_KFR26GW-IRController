@@ -40,8 +40,6 @@ class HaierAC160 : public Component {
 
     protected:
         IRHaierAC160 *ac_{nullptr};
-        std::vector<const char *> supported_custom_presets_{};
-        bool sleep_{false};
 
         HaierAC160Number *temperature_nu_{nullptr};
 
