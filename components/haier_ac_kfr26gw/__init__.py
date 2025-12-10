@@ -21,6 +21,9 @@ from esphome import pins
 AUTO_LOAD = ["number", "switch", "select"]
 
 CONF_TEMPERATURE_NUMBER = "temperature_number"
+CONF_POWER_SWITCH = "power_switch"
+CONF_SLEEP_SWITCH = "sleep_switch"
+CONF_LOCK_SWITCH = "lock_switch"
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
@@ -91,6 +94,27 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional(CONF_STEP, default=1): cv.int_,
                 }
             ),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_POWER_SWITCH,
+            default={ CONF_NAME: "Power" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_SLEEP_SWITCH,
+            default={ CONF_NAME: "Sleep" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_LOCK_SWITCH,
+            default={ CONF_NAME: "Lock" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
@@ -178,6 +202,9 @@ async def to_code(config):
         cg.add(set_func(nu))
 
     for conf, set_func in [
+        ( CONF_POWER_SWITCH, var.set_power_switch ),
+        ( CONF_SLEEP_SWITCH, var.set_sleep_switch ),
+        ( CONF_LOCK_SWITCH, var.set_lock_switch ),
         ( CONF_DISPLAY_SWITCH, var.set_display_switch ),
         ( CONF_AUX_HEATING_SWITCH, var.set_aux_heating_switch ),
     ]:

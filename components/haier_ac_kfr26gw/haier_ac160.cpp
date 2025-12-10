@@ -44,6 +44,57 @@ void HaierAC160::set_temperature_number(HaierAC160Number *temperature_nu) {
     );
 }
 
+void HaierAC160::power_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Power switch state changed to %s",
+        state ? "ON" : "OFF");
+    if (state != ac_->getPower()) {
+        ac_->setPower(state);
+    }
+}
+
+void HaierAC160::set_power_switch(HaierAC160Switch *power_sw) {
+    this->power_sw_ = power_sw;
+    this->power_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->power_switch_handler(state);
+        }
+    );
+}
+
+void HaierAC160::sleep_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Sleep switch state changed to %s",
+        state ? "ON" : "OFF");
+    if (state != ac_->getSleep()) {
+        ac_->setSleep(state);
+    }
+}
+
+void HaierAC160::set_sleep_switch(HaierAC160Switch *sleep_sw) {
+    this->sleep_sw_ = sleep_sw;
+    this->sleep_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->sleep_switch_handler(state);
+        }
+    );
+}
+
+void HaierAC160::lock_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Lock switch state changed to %s",
+        state ? "ON" : "OFF");
+    if (state != ac_->getLock()) {
+        ac_->setLock(state);
+    }
+}
+
+void HaierAC160::set_lock_switch(HaierAC160Switch *lock_sw) {
+    this->lock_sw_ = lock_sw;
+    this->lock_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->lock_switch_handler(state);
+        }
+    );
+}
+
 void HaierAC160::display_switch_handler(bool state) {
     ESP_LOGD(TAG, "Display switch state changed to %s",
         state ? "ON" : "OFF");

@@ -23,6 +23,9 @@ class HaierAC160 : public Component {
 
         void set_temperature_number(HaierAC160Number *temperature_nu);
 
+        void set_power_switch(HaierAC160Switch *power_sw);
+        void set_sleep_switch(HaierAC160Switch *sleep_switch);
+        void set_lock_switch(HaierAC160Switch *lock_switch);
         void set_display_switch(HaierAC160Switch *display_sw);
         void set_aux_heating_switch(HaierAC160Switch *aux_heating);
 
@@ -40,6 +43,9 @@ class HaierAC160 : public Component {
 
         HaierAC160Number *temperature_nu_{nullptr};
 
+        HaierAC160Switch *power_sw_{nullptr};
+        HaierAC160Switch *sleep_sw_{nullptr};
+        HaierAC160Switch *lock_sw_{nullptr};
         HaierAC160Switch *display_sw_{nullptr};
         HaierAC160Switch *aux_heating_sw_{nullptr};
 
@@ -49,6 +55,9 @@ class HaierAC160 : public Component {
 
         void temperature_number_handler(uint8_t temp);
 
+        void power_switch_handler(bool state);
+        void sleep_switch_handler(bool state);
+        void lock_switch_handler(bool state);
         void display_switch_handler(bool state);
         void aux_heating_switch_handler(bool state);
 
