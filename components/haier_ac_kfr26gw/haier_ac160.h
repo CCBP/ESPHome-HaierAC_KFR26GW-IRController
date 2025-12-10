@@ -21,6 +21,8 @@ class HaierAC160 : public Component {
 
         void perform();
 
+        void set_temperature_number(HaierAC160Number *temperature_nu);
+
         void set_display_switch(HaierAC160Switch *display_sw);
         void set_aux_heating_switch(HaierAC160Switch *aux_heating);
 
@@ -36,12 +38,16 @@ class HaierAC160 : public Component {
         std::vector<const char *> supported_custom_presets_{};
         bool sleep_{false};
 
+        HaierAC160Number *temperature_nu_{nullptr};
+
         HaierAC160Switch *display_sw_{nullptr};
         HaierAC160Switch *aux_heating_sw_{nullptr};
 
         HaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
         HaierAC160Select<uint8_t> *timer_hour_se_{nullptr};
         HaierAC160Select<uint8_t> *timer_minute_se_{nullptr};
+
+        void temperature_number_handler(uint8_t temp);
 
         void display_switch_handler(bool state);
         void aux_heating_switch_handler(bool state);

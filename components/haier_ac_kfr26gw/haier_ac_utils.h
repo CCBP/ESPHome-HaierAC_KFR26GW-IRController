@@ -1,10 +1,22 @@
 #pragma once
 
+#include "esphome/components/number/number.h"
 #include "esphome/components/switch/switch.h"
 #include "esphome/components/select/select.h"
 
 namespace esphome {
 namespace haier_ac160 {
+
+class HaierAC160Number : public number::Number, public Component {
+    public:
+        void set_callback_handler(std::function<void(float)> cb)
+            { this->cb_ = cb; }
+
+    protected:
+        std::function<void(float)> cb_;
+
+        void control(float value) override;
+};
 
 class HaierAC160Switch : public switch_::Switch, public Component {
     public:

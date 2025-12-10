@@ -31,6 +31,19 @@ void HaierAC160::perform() {
     ESP_LOGD(TAG, "  %s", ac_->toString().c_str());
 }
 
+void HaierAC160::temperature_number_handler(uint8_t temp) {
+    ESP_LOGD(TAG, "Temperature was set to %d", temp);
+}
+
+void HaierAC160::set_temperature_number(HaierAC160Number *temperature_nu) {
+    this->temperature_nu_ = temperature_nu;
+    this->temperature_nu_->set_callback_handler(
+        [this](float temp) -> void {
+            this->temperature_number_handler(static_cast<uint8_t>(temp));
+        }
+    );
+}
+
 void HaierAC160::display_switch_handler(bool state) {
     ESP_LOGD(TAG, "Display switch state changed to %s",
         state ? "ON" : "OFF");

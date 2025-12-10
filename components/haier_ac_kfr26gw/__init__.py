@@ -1,34 +1,37 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import switch, select
+from esphome.components import number, switch, select
 from esphome.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PIN,
     CONF_INVERTED,
     CONF_RESTORE_STATE,
+    CONF_MIN_VALUE,
+    CONF_MAX_VALUE,
+    CONF_STEP,
     CONF_OPTIONS,
     CONF_INITIAL_VALUE,
-    CONF_STEP,
     PLATFORM_ESP32,
     PLATFORM_ESP8266,
 )
 from esphome.core import CORE
 from esphome import pins
 
-AUTO_LOAD = ["switch", "select"]
+AUTO_LOAD = ["number", "switch", "select"]
 
+CONF_TEMPERATURE_NUMBER = "temperature_number"
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
 CONF_TIMER_HOUR_SELECT = "timer_hour_select"
 CONF_TIMER_MINUTE_SELECT = "timer_minute_select"
-CONF_MIN = "min"
-CONF_MAX = "max"
 
 haier_ac160_ns = cg.esphome_ns.namespace("haier_ac160")
 HaierAC160 = haier_ac160_ns.class_("HaierAC160", cg.Component)
 
+HaierAC160Number = haier_ac160_ns.class_(
+    "HaierAC160Number", number.Number, cg.Component)
 HaierAC160Switch = haier_ac160_ns.class_(
     "HaierAC160Switch", switch.Switch, cg.Component)
 HaierAC160Select = haier_ac160_ns.class_(
@@ -47,8 +50,8 @@ SWING_MODE = {
 }
 
 CONFIG_TIMER_HOUR_SCHEMA = {
-    cv.Optional(CONF_MIN, default=0): cv.int_range(min=0, max=23),
-    cv.Optional(CONF_MAX, default=23): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_MIN_VALUE, default=0): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_MAX_VALUE, default=23): cv.int_range(min=0, max=23),
     cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=23),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
     cv.Optional(CONF_OPTIONS):
@@ -56,8 +59,8 @@ CONFIG_TIMER_HOUR_SCHEMA = {
 }
 
 CONFIG_TIMER_MINUTE_SCHEMA = {
-    cv.Optional(CONF_MIN, default=0): cv.int_range(min=0, max=59),
-    cv.Optional(CONF_MAX, default=59): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_MIN_VALUE, default=0): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_MAX_VALUE, default=59): cv.int_range(min=0, max=59),
     cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=59),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
     cv.Optional(CONF_OPTIONS):
@@ -71,6 +74,25 @@ CONFIG_SCHEMA = cv.All(
         cv.Required(CONF_PIN): pins.internal_gpio_output_pin_number,
         cv.Optional(CONF_RESTORE_STATE, default=True): cv.boolean,
         cv.Optional(CONF_INVERTED, default=False): cv.boolean,
+        cv.Optional(
+            CONF_TEMPERATURE_NUMBER,
+            default={ CONF_NAME: "Temperature" }
+        ): cv.maybe_simple_value(
+            number.number_schema(HaierAC160Number)
+            .extend(cv.COMPONENT_SCHEMA)
+            .extend(
+                {
+                    cv.Optional(CONF_MIN_VALUE, default=16):
+                        cv.int_range(min=16, max=30),
+                    cv.Optional(CONF_MAX_VALUE, default=30):
+                        cv.int_range(min=16, max=30),
+                    cv.Optional(CONF_INITIAL_VALUE, default=25):
+                        cv.int_range(min=16, max=30),
+                    cv.Optional(CONF_STEP, default=1): cv.int_,
+                }
+            ),
+            key=CONF_NAME,
+        ),
         cv.Optional(
             CONF_DISPLAY_SWITCH,
             default={ CONF_NAME: "Display" }
@@ -89,9 +111,8 @@ CONFIG_SCHEMA = cv.All(
             CONF_SWING_MODE_SELECT,
             default={ CONF_NAME: "Swing Mode" }
         ): cv.maybe_simple_value(
-            select.select_schema(
-                HaierAC160Select
-            ).extend(
+            select.select_schema(HaierAC160Select)
+            .extend(
                 {
                     cv.Optional(CONF_OPTIONS):
                         cv.invalid(f"Do not set options manually for "
@@ -104,18 +125,16 @@ CONFIG_SCHEMA = cv.All(
             CONF_TIMER_HOUR_SELECT,
             default={ CONF_NAME: "Hour" }
         ): cv.maybe_simple_value(
-            select.select_schema(
-                HaierAC160Select
-            ).extend(CONFIG_TIMER_HOUR_SCHEMA),
+            select.select_schema(HaierAC160Select)
+            .extend(CONFIG_TIMER_HOUR_SCHEMA),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_TIMER_MINUTE_SELECT,
             default={ CONF_NAME: "Minute" }
         ): cv.maybe_simple_value(
-            select.select_schema(
-                HaierAC160Select
-            ).extend(CONFIG_TIMER_MINUTE_SCHEMA),
+            select.select_schema(HaierAC160Select)
+            .extend(CONFIG_TIMER_MINUTE_SCHEMA),
             key=CONF_NAME,
         ),
     },
@@ -123,8 +142,8 @@ CONFIG_SCHEMA = cv.All(
 )
 
 def generate_timer_options(config):
-    min_val = config.get(CONF_MIN, 0)
-    max_val = config.get(CONF_MAX,
+    min_val = config.get(CONF_MIN_VALUE, 0)
+    max_val = config.get(CONF_MAX_VALUE,
         23 if CONF_TIMER_HOUR_SELECT in config else 59)
     step = config.get(CONF_STEP, 1)
 
@@ -145,6 +164,18 @@ async def to_code(config):
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
+
+    for conf, set_func in [
+        ( CONF_TEMPERATURE_NUMBER, var.set_temperature_number ),
+    ]:
+        nu = await number.new_number(
+            config[conf],
+            min_value=config[conf][CONF_MIN_VALUE],
+            max_value=config[conf][CONF_MAX_VALUE],
+            step=config[conf][CONF_STEP],
+        )
+        await cg.register_component(nu, config[conf])
+        cg.add(set_func(nu))
 
     for conf, set_func in [
         ( CONF_DISPLAY_SWITCH, var.set_display_switch ),
