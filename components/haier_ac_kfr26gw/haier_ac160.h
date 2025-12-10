@@ -7,7 +7,6 @@
 #include "haier_ac_utils.h"
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
-#include "ir_Haier.h"
 
 namespace esphome {
 namespace haier_ac160 {
@@ -33,8 +32,12 @@ class HaierAC160 : public Component {
                 HaierAC160Select<HaierAC160SwingMode> *swing_mode_se);
         void set_fan_speed_select(
                 HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se);
+        void set_timer_hour_step(uint8_t step)
+            { this->timer_hour_step = step; }
         void set_timer_hour_select(
                 HaierAC160Select<uint8_t> *timer_hour_se);
+        void set_timer_minute_step(uint8_t step)
+            { this->timer_minute_step = step; }
         void set_timer_minute_select(
                 HaierAC160Select<uint8_t> *timer_minute_se);
 
@@ -51,7 +54,9 @@ class HaierAC160 : public Component {
 
         HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se_{nullptr};
         HaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
+        uint8_t timer_hour_step{1};
         HaierAC160Select<uint8_t> *timer_hour_se_{nullptr};
+        uint8_t timer_minute_step{1};
         HaierAC160Select<uint8_t> *timer_minute_se_{nullptr};
 
         void temperature_number_handler(uint8_t temp);
@@ -64,6 +69,7 @@ class HaierAC160 : public Component {
 
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
         void fan_speed_select_handler(HaierAC160FanSpeed fan_speed);
+        void timer_select_handler();
         void timer_hour_select_handler(uint8_t hour);
         void timer_minute_select_handler(uint8_t minute);
 };

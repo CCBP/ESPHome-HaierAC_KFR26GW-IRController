@@ -212,6 +212,9 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
+    var.set_timer_hour_step(config[CONF_TIMER_HOUR_SELECT][CONF_STEP])
+    var.set_timer_minute_step(config[CONF_TIMER_MINUTE_SELECT][CONF_STEP])
+
     for conf, set_func in [
         ( CONF_TEMPERATURE_NUMBER, var.set_temperature_number ),
     ]:

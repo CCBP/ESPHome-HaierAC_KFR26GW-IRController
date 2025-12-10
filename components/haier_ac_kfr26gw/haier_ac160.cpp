@@ -33,6 +33,11 @@ void HaierAC160::perform() {
 
 void HaierAC160::temperature_number_handler(uint8_t temp) {
     ESP_LOGD(TAG, "Temperature was set to %d", temp);
+
+    if (temp != ac_->getTemp()) {
+        ac_->setTemp(temp);
+        this->perform();
+    }
 }
 
 void HaierAC160::set_temperature_number(HaierAC160Number *temperature_nu) {
@@ -47,8 +52,10 @@ void HaierAC160::set_temperature_number(HaierAC160Number *temperature_nu) {
 void HaierAC160::power_switch_handler(bool state) {
     ESP_LOGD(TAG, "Power switch state changed to %s",
         state ? "ON" : "OFF");
+
     if (state != ac_->getPower()) {
         ac_->setPower(state);
+        this->perform();
     }
 }
 
@@ -64,8 +71,10 @@ void HaierAC160::set_power_switch(HaierAC160Switch *power_sw) {
 void HaierAC160::sleep_switch_handler(bool state) {
     ESP_LOGD(TAG, "Sleep switch state changed to %s",
         state ? "ON" : "OFF");
+
     if (state != ac_->getSleep()) {
         ac_->setSleep(state);
+        this->perform();
     }
 }
 
@@ -81,8 +90,10 @@ void HaierAC160::set_sleep_switch(HaierAC160Switch *sleep_sw) {
 void HaierAC160::lock_switch_handler(bool state) {
     ESP_LOGD(TAG, "Lock switch state changed to %s",
         state ? "ON" : "OFF");
+
     if (state != ac_->getLock()) {
         ac_->setLock(state);
+        this->perform();
     }
 }
 
@@ -98,10 +109,10 @@ void HaierAC160::set_lock_switch(HaierAC160Switch *lock_sw) {
 void HaierAC160::display_switch_handler(bool state) {
     ESP_LOGD(TAG, "Display switch state changed to %s",
         state ? "ON" : "OFF");
+
     if (state != ac_->getLightToggle()) {
         ac_->setLightToggle(state);
-        if (ac_->getPower())
-            ac_->send();
+        this->perform();
     }
 }
 
@@ -117,10 +128,10 @@ void HaierAC160::set_display_switch(HaierAC160Switch *display_sw) {
 void HaierAC160::aux_heating_switch_handler(bool state) {
     ESP_LOGD(TAG, "Auxiliary Heating switch state changed to %s",
         state ? "ON" : "OFF");
+
     if (state != ac_->getAuxHeating()) {
         ac_->setAuxHeating(state);
-        if (ac_->getPower())
-            ac_->send();
+        this->perform();
     }
 }
 
@@ -137,7 +148,12 @@ void HaierAC160::set_aux_heating_switch(
 void HaierAC160::swing_mode_select_handler(
         HaierAC160SwingMode swing_mode) {
     ESP_LOGD(TAG, "Swing Mode was selected as %s",
-        get_swing_mode_str(swing_mode));
+        Converts::get_swing_mode_str(swing_mode));
+
+    if (swing_mode != ac_->getSwingV()) {
+        ac_->setSwingV(swing_mode);
+        this->perform();
+    }
 }
 
 void HaierAC160::set_swing_mode_select(
@@ -153,7 +169,12 @@ void HaierAC160::set_swing_mode_select(
 void HaierAC160::fan_speed_select_handler(
         HaierAC160FanSpeed fan_speed) {
     ESP_LOGD(TAG, "Fan Speed was selected as %s",
-        get_fan_speed_str(fan_speed));
+        Converts::get_fan_speed_str(fan_speed));
+
+    if (fan_speed != ac_->getFan()) {
+        ac_->setFan(fan_speed);
+        this->perform();
+    }
 }
 
 void HaierAC160::set_fan_speed_select(
@@ -166,8 +187,25 @@ void HaierAC160::set_fan_speed_select(
     );
 }
 
-void HaierAC160::timer_hour_select_handler(uint8_t hour) {
-    ESP_LOGD(TAG, "Timer set to hour %d", hour);
+void HaierAC160::timer_select_handler() {
+    uint8_t hour = this->timer_hour_se_->active_index().value_or(0);
+    if (hour != 0) // subtract "--" from the index
+        hour = this->timer_hour_step * (hour - 1);
+    uint8_t minute = this->timer_minute_se_->active_index().value_or(0);
+    if (minute != 0) // subtract "--" from the index
+        minute = this->timer_minute_step * (minute - 1);
+    uint16_t total_mins = hour * 60 + minute;
+    ESP_LOGD(TAG, "Timer wae select as %02d:%02d, "
+            "The AC will turn off in %d minutes.",
+            lhour, minute, total_mins);
+
+    ac_->setOffTimer(total_mins);
+    this->perform();
+
+    if (total_mins == 0) {
+        this->timer_hour_se_->make_call().set_index(0);
+        this->timer_minute_se_->make_call().set_index(0);
+    }
 }
 
 void HaierAC160::set_timer_hour_select(
@@ -175,13 +213,13 @@ void HaierAC160::set_timer_hour_select(
     this->timer_hour_se_ = timer_hour_se;
     this->timer_hour_se_->set_callback_handler(
         [this](uint8_t hour) -> void {
-            this->timer_hour_select_handler(hour);
+            const char *hour_str = this->timer_hour_se_->option_at(hour);
+            ESP_LOGD(TAG, "Timer Hour was selected as %s with step %d",
+                hour_str, this->timer_hour_step);
+
+            this->timer_select_handler();
         }
     );
-}
-
-void HaierAC160::timer_minute_select_handler(uint8_t minute) {
-    ESP_LOGD(TAG, "Timer set to minute %d", minute);
 }
 
 void HaierAC160::set_timer_minute_select(
@@ -189,7 +227,11 @@ void HaierAC160::set_timer_minute_select(
     this->timer_minute_se_ = timer_minute_se;
     this->timer_minute_se_->set_callback_handler(
         [this](uint8_t minute) -> void {
-            this->timer_minute_select_handler(minute);
+            const char *min_str = this->timer_minute_se_->option_at(minute);
+            ESP_LOGD(TAG, "Timer Minute was selected as %s with step %d",
+
+                min_str, this->timer_minute_step);
+            this->timer_select_handler();
         }
     );
 }
