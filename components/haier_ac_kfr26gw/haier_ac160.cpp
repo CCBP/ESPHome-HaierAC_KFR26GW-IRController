@@ -145,6 +145,27 @@ void HaierAC160::set_aux_heating_switch(
     );
 }
 
+void HaierAC160::operate_mode_select_handler(
+        HaierAC160OperateMode op_mode) {
+    ESP_LOGD(TAG, "Operate Mode was selected as %s",
+        Converts::get_operate_mode_str(op_mode));
+
+    if (op_mode != ac_->getMode()) {
+        ac_->setMode(op_mode);
+        this->perform();
+    }
+}
+
+void HaierAC160::set_operate_mode_select(
+        HaierAC160Select<HaierAC160OperateMode> *operate_mode_se) {
+    this->operate_mode_se_ = operate_mode_se;
+    this->operate_mode_se_->set_callback_handler(
+        [this](HaierAC160OperateMode op_mode) -> void {
+            this->operate_mode_select_handler(op_mode);
+        }
+    );
+}
+
 void HaierAC160::swing_mode_select_handler(
         HaierAC160SwingMode swing_mode) {
     ESP_LOGD(TAG, "Swing Mode was selected as %s",
@@ -197,7 +218,7 @@ void HaierAC160::timer_select_handler() {
     uint16_t total_mins = hour * 60 + minute;
     ESP_LOGD(TAG, "Timer wae select as %02d:%02d, "
             "The AC will turn off in %d minutes.",
-            lhour, minute, total_mins);
+            hour, minute, total_mins);
 
     ac_->setOffTimer(total_mins);
     this->perform();

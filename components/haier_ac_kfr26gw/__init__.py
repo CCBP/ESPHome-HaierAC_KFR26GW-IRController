@@ -27,6 +27,7 @@ CONF_LOCK_SWITCH = "lock_switch"
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
+CONF_OPERATE_MODE_SELECT = "operate_mode_select"
 CONF_FAN_SPEED_SELECT = "fan_speed_select"
 CONF_TIMER_HOUR_SELECT = "timer_hour_select"
 CONF_TIMER_MINUTE_SELECT = "timer_minute_select"
@@ -40,6 +41,15 @@ HaierAC160Switch = haier_ac160_ns.class_(
     "HaierAC160Switch", switch.Switch, cg.Component)
 HaierAC160Select = haier_ac160_ns.class_(
     "HaierAC160Select", select.Select, cg.Component)
+
+OperateMode = haier_ac160_ns.enum("HaierAC160OperateMode")
+OPERATE_MODE = {
+    "MODE_AUTO" : OperateMode.MODE_AUTO,
+    "MODE_COOL" : OperateMode.MODE_COOL,
+    "MODE_HEAT" : OperateMode.MODE_HEAT,
+    "MODE_DRY"  : OperateMode.MODE_DRY,
+    "MODE_FAN"  : OperateMode.MODE_FAN,
+}
 
 SwingMode = haier_ac160_ns.enum("HaierAC160SwingMode")
 SWING_MODE = {
@@ -61,13 +71,17 @@ FAN_SPEED = {
     "SPEED_HIGH"    : FanSpeed.SPEED_HIGH,
 }
 
+def select_options_invalid(cfg_name: str):
+    return {
+        cv.Optional(CONF_OPTIONS):
+            cv.invalid(f"Do not set options manually for {cfg_name}"),
+    }
+
 CONFIG_TIMER_HOUR_SCHEMA = {
     cv.Optional(CONF_MIN_VALUE, default=0): cv.int_range(min=0, max=23),
     cv.Optional(CONF_MAX_VALUE, default=23): cv.int_range(min=0, max=23),
     cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=23),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
-    cv.Optional(CONF_OPTIONS):
-        cv.invalid(f"Do not set options manually for {CONF_TIMER_HOUR_SELECT}"),
 }
 
 CONFIG_TIMER_MINUTE_SCHEMA = {
@@ -75,8 +89,6 @@ CONFIG_TIMER_MINUTE_SCHEMA = {
     cv.Optional(CONF_MAX_VALUE, default=59): cv.int_range(min=0, max=59),
     cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=59),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
-    cv.Optional(CONF_OPTIONS):
-        cv.invalid(f"Do not set options manually for {CONF_TIMER_MINUTE_SELECT}"),
 }
 
 CONFIG_SCHEMA = cv.All(
@@ -141,17 +153,19 @@ CONFIG_SCHEMA = cv.All(
             key=CONF_NAME,
         ),
         cv.Optional(
+            CONF_OPERATE_MODE_SELECT,
+            default={ CONF_NAME: "Operate Mode" }
+        ): cv.maybe_simple_value(
+            select.select_schema(HaierAC160Select)
+            .extend(select_options_invalid(CONF_OPERATE_MODE_SELECT)),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
             CONF_SWING_MODE_SELECT,
             default={ CONF_NAME: "Swing Mode" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
-            .extend(
-                {
-                    cv.Optional(CONF_OPTIONS):
-                        cv.invalid(f"Do not set options manually for "
-                            "{CONF_SWING_MODE_SELECT}"),
-                },
-            ),
+            .extend(select_options_invalid(CONF_SWING_MODE_SELECT)),
             key=CONF_NAME,
         ),
         cv.Optional(
@@ -159,13 +173,7 @@ CONFIG_SCHEMA = cv.All(
             default={ CONF_NAME: "Fan Speed" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
-            .extend(
-                {
-                    cv.Optional(CONF_OPTIONS):
-                        cv.invalid(f"Do not set options manually for "
-                            "{CONF_SWING_MODE_SELECT}"),
-                },
-            ),
+            .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
             key=CONF_NAME,
         ),
         cv.Optional(
@@ -173,7 +181,8 @@ CONFIG_SCHEMA = cv.All(
             default={ CONF_NAME: "Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
-            .extend(CONFIG_TIMER_HOUR_SCHEMA),
+            .extend(CONFIG_TIMER_HOUR_SCHEMA)
+            .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
             key=CONF_NAME,
         ),
         cv.Optional(
@@ -181,7 +190,8 @@ CONFIG_SCHEMA = cv.All(
             default={ CONF_NAME: "Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
-            .extend(CONFIG_TIMER_MINUTE_SCHEMA),
+            .extend(CONFIG_TIMER_MINUTE_SCHEMA)
+            .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
             key=CONF_NAME,
         ),
     },
@@ -239,6 +249,10 @@ async def to_code(config):
         cg.add(set_func(sw))
 
     for conf, arg_type, opts, set_func in [
+        (
+            CONF_OPERATE_MODE_SELECT, OperateMode,
+            list(OPERATE_MODE.keys()), var.set_operate_mode_select
+        ),
         (
             CONF_SWING_MODE_SELECT, SwingMode,
             list(SWING_MODE.keys()), var.set_swing_mode_select

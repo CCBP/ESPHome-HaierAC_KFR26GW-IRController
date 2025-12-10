@@ -7,6 +7,14 @@
 namespace esphome {
 namespace haier_ac160 {
 
+enum HaierAC160OperateMode : uint8_t {
+    MODE_AUTO = kHaierAcYrw02Auto,
+    MODE_COOL = kHaierAcYrw02Cool,
+    MODE_HEAT = kHaierAcYrw02Heat,
+    MODE_DRY = kHaierAcYrw02Dry,
+    MODE_FAN = kHaierAcYrw02Fan,
+};
+
 enum HaierAC160SwingMode : uint8_t {
     SWING_OFF = kHaierAc160SwingVOff,
     SWING_AUTO = kHaierAc160SwingVAuto,
@@ -37,10 +45,12 @@ class Converts {
             return "UNKNOW";
         }
 
+        static const char *const get_operate_mode_str(HaierAC160OperateMode op_mode);
         static const char *const get_swing_mode_str(HaierAC160SwingMode swing_mode);
         static const char *const get_fan_speed_str(HaierAC160FanSpeed fan_speed);
 
     private:
+        static std::map<HaierAC160OperateMode, const char *> OPERATE_MODE_STR;
         static std::map<HaierAC160SwingMode, const char *> SWING_MODE_STR;
         static std::map<HaierAC160FanSpeed, const char *> FAN_SPEED_STR;
 };

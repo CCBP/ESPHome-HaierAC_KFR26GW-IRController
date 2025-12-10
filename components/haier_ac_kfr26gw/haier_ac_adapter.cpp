@@ -3,6 +3,15 @@
 namespace esphome {
 namespace haier_ac160 {
 
+std::map<HaierAC160OperateMode, const char *>
+Converts::OPERATE_MODE_STR = {
+    { MODE_AUTO, "AUTO" },
+    { MODE_COOL, "COOL" },
+    { MODE_HEAT, "HEAT" },
+    { MODE_DRY, "DRY" },
+    { MODE_FAN, "FAN" },
+};
+
 std::map<HaierAC160SwingMode, const char *>
 Converts::SWING_MODE_STR = {
     { SWING_OFF, "OFF" },
@@ -22,6 +31,10 @@ Converts::FAN_SPEED_STR = {
     { SPEED_MEDIUM, "MEDIUM" },
     { SPEED_HIGH, "HIGH" },
 };
+
+const char *const Converts::get_operate_mode_str(HaierAC160OperateMode op_mode) {
+    return get_enum_str(op_mode, OPERATE_MODE_STR);
+}
 
 const char *const Converts::get_swing_mode_str(HaierAC160SwingMode swing_mode) {
     return get_enum_str(swing_mode, SWING_MODE_STR);
