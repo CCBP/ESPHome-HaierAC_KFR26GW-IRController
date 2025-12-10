@@ -31,6 +31,8 @@ class HaierAC160 : public Component {
 
         void set_swing_mode_select(
                 HaierAC160Select<HaierAC160SwingMode> *swing_mode_se);
+        void set_fan_speed_select(
+                HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se);
         void set_timer_hour_select(
                 HaierAC160Select<uint8_t> *timer_hour_se);
         void set_timer_minute_select(
@@ -49,6 +51,7 @@ class HaierAC160 : public Component {
         HaierAC160Switch *display_sw_{nullptr};
         HaierAC160Switch *aux_heating_sw_{nullptr};
 
+        HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se_{nullptr};
         HaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
         HaierAC160Select<uint8_t> *timer_hour_se_{nullptr};
         HaierAC160Select<uint8_t> *timer_minute_se_{nullptr};
@@ -62,6 +65,7 @@ class HaierAC160 : public Component {
         void aux_heating_switch_handler(bool state);
 
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
+        void fan_speed_select_handler(HaierAC160FanSpeed fan_speed);
         void timer_hour_select_handler(uint8_t hour);
         void timer_minute_select_handler(uint8_t minute);
 };

@@ -27,6 +27,7 @@ CONF_LOCK_SWITCH = "lock_switch"
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
+CONF_FAN_SPEED_SELECT = "fan_speed_select"
 CONF_TIMER_HOUR_SELECT = "timer_hour_select"
 CONF_TIMER_MINUTE_SELECT = "timer_minute_select"
 
@@ -50,6 +51,14 @@ SWING_MODE = {
     "Middle"    : SwingMode.SWING_MIDDLE,
     "Low"       : SwingMode.SWING_LOW,
     "Lowest"    : SwingMode.SWING_LOWEST,
+}
+
+FanSpeed = haier_ac160_ns.enum("HaierAC160FanSpeed")
+FAN_SPEED = {
+    "SPEED_AUTO"    : FanSpeed.SPEED_AUTO,
+    "SPEED_LOW"     : FanSpeed.SPEED_LOW,
+    "SPEED_MEDIUM"  : FanSpeed.SPEED_MEDIUM,
+    "SPEED_HIGH"    : FanSpeed.SPEED_HIGH,
 }
 
 CONFIG_TIMER_HOUR_SCHEMA = {
@@ -146,6 +155,20 @@ CONFIG_SCHEMA = cv.All(
             key=CONF_NAME,
         ),
         cv.Optional(
+            CONF_FAN_SPEED_SELECT,
+            default={ CONF_NAME: "Fan Speed" }
+        ): cv.maybe_simple_value(
+            select.select_schema(HaierAC160Select)
+            .extend(
+                {
+                    cv.Optional(CONF_OPTIONS):
+                        cv.invalid(f"Do not set options manually for "
+                            "{CONF_SWING_MODE_SELECT}"),
+                },
+            ),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
             CONF_TIMER_HOUR_SELECT,
             default={ CONF_NAME: "Hour" }
         ): cv.maybe_simple_value(
@@ -216,6 +239,10 @@ async def to_code(config):
         (
             CONF_SWING_MODE_SELECT, SwingMode,
             list(SWING_MODE.keys()), var.set_swing_mode_select
+        ),
+        (
+            CONF_FAN_SPEED_SELECT, FanSpeed,
+            list(FAN_SPEED.keys()), var.set_fan_speed_select
         ),
         (
             CONF_TIMER_HOUR_SELECT, cg.uint8,

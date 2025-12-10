@@ -5,10 +5,8 @@
 namespace esphome {
 namespace haier_ac160 {
 
-struct StringToUint8 {
-    const char *str;
-    const uint8_t value;
-};
+#define get_enum_str(index, enum_name) \
+    ((index) < std::size(enum_name)) ? enum_name[index] : "UNKNOW"
 
 enum HaierAC160Preset : uint8_t {
     PRESET_NONE,
@@ -39,11 +37,24 @@ constexpr const char *SWING_MODE_STR[] {
     [SWING_LOW] = "LOW",
     [SWING_LOWEST] = "LOWEST",
 };
-#define get_swing_mode_str(swing_mode) ( \
-    (swing_mode) < std::size(SWING_MODE_STR) ? \
-        SWING_MODE_STR[swing_mode] : "UNKNOW" \
-)
+#define get_swing_mode_str(swing_mode) \
+    get_enum_str(swing_mode, SWING_MODE_STR)
 
+enum HaierAC160FanSpeed : uint8_t {
+    SPEED_AUTO,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_HIGH,
+};
+
+constexpr const char *FAN_SPEED_STR[] {
+    [SPEED_AUTO] = "AUTO",
+    [SPEED_LOW] = "LOW",
+    [SPEED_MEDIUM] = "MEDIUM",
+    [SPEED_HIGH] = "HIGH",
+};
+#define get_fan_speed_str(fan_speed) \
+    get_enum_str(fan_speed, FAN_SPEED_STR)
 class HaierAC160PresetStr {
     public:
         static const char *const SELF_CLEAN;

@@ -150,6 +150,22 @@ void HaierAC160::set_swing_mode_select(
     );
 }
 
+void HaierAC160::fan_speed_select_handler(
+        HaierAC160FanSpeed fan_speed) {
+    ESP_LOGD(TAG, "Fan Speed was selected as %s",
+        get_fan_speed_str(fan_speed));
+}
+
+void HaierAC160::set_fan_speed_select(
+        HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se) {
+    this->fan_speed_se_ = fan_speed_se;
+    this->fan_speed_se_->set_callback_handler(
+        [this](HaierAC160FanSpeed fan_speed) -> void {
+            this->fan_speed_select_handler(fan_speed);
+        }
+    );
+}
+
 void HaierAC160::timer_hour_select_handler(uint8_t hour) {
     ESP_LOGD(TAG, "Timer set to hour %d", hour);
 }
