@@ -26,6 +26,10 @@ CONF_SLEEP_SWITCH = "sleep_switch"
 CONF_LOCK_SWITCH = "lock_switch"
 CONF_DISPLAY_SWITCH = "display_switch"
 CONF_AUX_HEATING_SWITCH = "aux_heating_switch"
+CONF_SELF_CLEAN_SWITCH = "self_clean_switch"
+CONF_TURBO_SWITCH = "turbo_switch"
+CONF_QUIET_SWITCH = "quiet_switch"
+CONF_HEALTH_SWITCH = "health_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
 CONF_OPERATE_MODE_SELECT = "operate_mode_select"
 CONF_FAN_SPEED_SELECT = "fan_speed_select"
@@ -150,6 +154,34 @@ CONFIG_SCHEMA = cv.All(
             key=CONF_NAME,
         ),
         cv.Optional(
+            CONF_SELF_CLEAN_SWITCH,
+            default={ CONF_NAME: "Self Clean" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_TURBO_SWITCH,
+            default={ CONF_NAME: "Turbo" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_QUIET_SWITCH,
+            default={ CONF_NAME: "Quiet" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_HEALTH_SWITCH,
+            default={ CONF_NAME: "Health" }
+        ): cv.maybe_simple_value(
+            switch.switch_schema(HaierAC160Switch),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
             CONF_OPERATE_MODE_SELECT,
             default={ CONF_NAME: "Operate Mode" }
         ): cv.maybe_simple_value(
@@ -240,6 +272,10 @@ async def to_code(config):
         ( CONF_LOCK_SWITCH, var.set_lock_switch ),
         ( CONF_DISPLAY_SWITCH, var.set_display_switch ),
         ( CONF_AUX_HEATING_SWITCH, var.set_aux_heating_switch ),
+        ( CONF_SELF_CLEAN_SWITCH, var.set_self_clean_switch ),
+        ( CONF_TURBO_SWITCH, var.set_turbo_switch ),
+        ( CONF_QUIET_SWITCH, var.set_quiet_switch ),
+        ( CONF_HEALTH_SWITCH, var.set_health_switch ),
     ]:
         sw = await switch.new_switch(config[conf])
         await cg.register_component(sw, config[conf])

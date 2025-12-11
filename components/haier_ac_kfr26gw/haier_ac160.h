@@ -26,7 +26,11 @@ class HaierAC160 : public Component {
         void set_sleep_switch(HaierAC160Switch *sleep_switch);
         void set_lock_switch(HaierAC160Switch *lock_switch);
         void set_display_switch(HaierAC160Switch *display_sw);
-        void set_aux_heating_switch(HaierAC160Switch *aux_heating);
+        void set_aux_heating_switch(HaierAC160Switch *aux_heating_sw);
+        void set_self_clean_switch(HaierAC160Switch *self_clean_sw);
+        void set_turbo_switch(HaierAC160Switch *turbo_sw);
+        void set_quiet_switch(HaierAC160Switch *quiet_sw);
+        void set_health_switch(HaierAC160Switch *health_sw);
 
         void set_operate_mode_select(HaierAC160Select *operate_mode_se_);
         void set_swing_mode_select(HaierAC160Select *swing_mode_se);
@@ -48,6 +52,10 @@ class HaierAC160 : public Component {
         HaierAC160Switch *lock_sw_{nullptr};
         HaierAC160Switch *display_sw_{nullptr};
         HaierAC160Switch *aux_heating_sw_{nullptr};
+        HaierAC160Switch *self_clean_sw_{nullptr};
+        HaierAC160Switch *turbo_sw_{nullptr};
+        HaierAC160Switch *quiet_sw_{nullptr};
+        HaierAC160Switch *health_sw_{nullptr};
 
         HaierAC160Select *operate_mode_se_{nullptr};
         HaierAC160Select *fan_speed_se_{nullptr};
@@ -66,6 +74,10 @@ class HaierAC160 : public Component {
         void lock_switch_handler(bool state);
         void display_switch_handler(bool state);
         void aux_heating_switch_handler(bool state);
+        void self_clean_switch_handler(bool state);
+        void turbo_switch_handler(bool state);
+        void quiet_switch_handler(bool state);
+        void health_switch_handler(bool state);
 
         void operate_mode_select_handler(HaierAC160OperateMode op_mode);
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);

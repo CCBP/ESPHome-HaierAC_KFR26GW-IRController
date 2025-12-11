@@ -147,6 +147,82 @@ void HaierAC160::set_aux_heating_switch(
     );
 }
 
+void HaierAC160::self_clean_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Self Clean switch state changed to %s",
+        state ? "ON" : "OFF");
+
+    if (state != ac_->getClean()) {
+        ac_->setClean(state);
+        this->perform();
+    }
+}
+
+void HaierAC160::set_self_clean_switch(HaierAC160Switch *self_clean_sw) {
+    this->self_clean_sw_ = self_clean_sw;
+    this->self_clean_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->self_clean_switch_handler(state);
+        }
+    );
+}
+
+void HaierAC160::turbo_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Turbo switch state changed to %s",
+        state ? "ON" : "OFF");
+
+    if (state != ac_->getTurbo()) {
+        ac_->setTurbo(state);
+        this->perform();
+    }
+}
+
+void HaierAC160::set_turbo_switch(HaierAC160Switch *turbo_sw) {
+    this->turbo_sw_ = turbo_sw;
+    this->turbo_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->turbo_switch_handler(state);
+        }
+    );
+}
+
+void HaierAC160::quiet_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Quiet switch changed to %s",
+        state ? "ON" : "OFF");
+
+    if (state != ac_->getQuiet()) {
+        ac_->setQuiet(state);
+        this->perform();
+    }
+}
+
+void HaierAC160::set_quiet_switch(HaierAC160Switch *quiet_sw) {
+    this->quiet_sw_ = quiet_sw;
+    this->quiet_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->quiet_switch_handler(state);
+        }
+    );
+}
+
+void HaierAC160::health_switch_handler(bool state) {
+    ESP_LOGD(TAG, "Health switch changed to %s",
+        state ? "ON" : "OFF");
+
+    if (state != ac_->getHealth()) {
+        ac_->setHealth(state);
+        this->perform();
+    }
+}
+
+void HaierAC160::set_health_switch(HaierAC160Switch *health_sw) {
+    this->health_sw_ = health_sw;
+    this->health_sw_->set_callback_handler(
+        [this](bool state) -> void {
+            this->health_switch_handler(state);
+        }
+    );
+}
+
 void HaierAC160::operate_mode_select_handler(
         HaierAC160OperateMode op_mode) {
     if (op_mode != ac_->getMode()) {
