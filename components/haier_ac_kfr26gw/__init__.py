@@ -33,8 +33,10 @@ CONF_HEALTH_SWITCH = "health_switch"
 CONF_SWING_MODE_SELECT = "swing_mode_select"
 CONF_OPERATE_MODE_SELECT = "operate_mode_select"
 CONF_FAN_SPEED_SELECT = "fan_speed_select"
-CONF_TIMER_HOUR_SELECT = "timer_hour_select"
-CONF_TIMER_MINUTE_SELECT = "timer_minute_select"
+CONF_ON_TIMER_HOUR_SELECT = "on_timer_hour_select"
+CONF_ON_TIMER_MINUTE_SELECT = "on_timer_minute_select"
+CONF_OFF_TIMER_HOUR_SELECT = "off_timer_hour_select"
+CONF_OFF_TIMER_MINUTE_SELECT = "off_timer_minute_select"
 
 haier_ac160_ns = cg.esphome_ns.namespace("haier_ac160")
 HaierAC160 = haier_ac160_ns.class_("HaierAC160", cg.Component)
@@ -206,31 +208,49 @@ CONFIG_SCHEMA = cv.All(
             key=CONF_NAME,
         ),
         cv.Optional(
-            CONF_TIMER_HOUR_SELECT,
-            default={ CONF_NAME: "Hour" }
+            CONF_ON_TIMER_HOUR_SELECT,
+            default={ CONF_NAME: "On Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_HOUR_SCHEMA)
-            .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
+            .extend(select_options_invalid(CONF_ON_TIMER_HOUR_SELECT)),
             key=CONF_NAME,
         ),
         cv.Optional(
-            CONF_TIMER_MINUTE_SELECT,
-            default={ CONF_NAME: "Minute" }
+            CONF_ON_TIMER_MINUTE_SELECT,
+            default={ CONF_NAME: "On Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_MINUTE_SCHEMA)
-            .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
+            .extend(select_options_invalid(CONF_ON_TIMER_MINUTE_SELECT)),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_OFF_TIMER_HOUR_SELECT,
+            default={ CONF_NAME: "Off Hour" }
+        ): cv.maybe_simple_value(
+            select.select_schema(HaierAC160Select)
+            .extend(CONFIG_TIMER_HOUR_SCHEMA)
+            .extend(select_options_invalid(CONF_OFF_TIMER_HOUR_SELECT)),
+            key=CONF_NAME,
+        ),
+        cv.Optional(
+            CONF_OFF_TIMER_MINUTE_SELECT,
+            default={ CONF_NAME: "Off Minute" }
+        ): cv.maybe_simple_value(
+            select.select_schema(HaierAC160Select)
+            .extend(CONFIG_TIMER_MINUTE_SCHEMA)
+            .extend(select_options_invalid(CONF_OFF_TIMER_MINUTE_SELECT)),
             key=CONF_NAME,
         ),
     },
     cv.only_on([PLATFORM_ESP32, PLATFORM_ESP8266]),
 )
 
-def generate_timer_options(config):
+def generate_timer_options(config, is_hour: bool):
     min_val = config.get(CONF_MIN_VALUE, 0)
     max_val = config.get(CONF_MAX_VALUE,
-        23 if CONF_TIMER_HOUR_SELECT in config else 59)
+        23 if is_hour else 59)
     step = config.get(CONF_STEP, 1)
 
     options = ["--"]
@@ -250,9 +270,6 @@ async def to_code(config):
 
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-
-    var.set_timer_hour_step(config[CONF_TIMER_HOUR_SELECT][CONF_STEP])
-    var.set_timer_minute_step(config[CONF_TIMER_MINUTE_SELECT][CONF_STEP])
 
     for conf, set_func in [
         ( CONF_TEMPERATURE_NUMBER, var.set_temperature_number ),
@@ -295,14 +312,24 @@ async def to_code(config):
             FAN_SPEED, var.set_fan_speed_select
         ),
         (
-            CONF_TIMER_HOUR_SELECT,
-            generate_timer_options(config[CONF_TIMER_HOUR_SELECT]),
-            var.set_timer_hour_select
+            CONF_ON_TIMER_HOUR_SELECT,
+            generate_timer_options(config[CONF_ON_TIMER_HOUR_SELECT], True),
+            var.set_on_timer_hour_select
         ),
         (
-            CONF_TIMER_MINUTE_SELECT,
-            generate_timer_options(config[CONF_TIMER_MINUTE_SELECT]),
-            var.set_timer_minute_select
+            CONF_ON_TIMER_MINUTE_SELECT,
+            generate_timer_options(config[CONF_ON_TIMER_MINUTE_SELECT], False),
+            var.set_on_timer_minute_select
+        ),
+        (
+            CONF_OFF_TIMER_HOUR_SELECT,
+            generate_timer_options(config[CONF_OFF_TIMER_HOUR_SELECT], True),
+            var.set_off_timer_hour_select
+        ),
+        (
+            CONF_OFF_TIMER_MINUTE_SELECT,
+            generate_timer_options(config[CONF_OFF_TIMER_MINUTE_SELECT], False),
+            var.set_off_timer_minute_select
         ),
     ]:
         se = await select.new_select(config[conf], options=opts)

@@ -5,29 +5,75 @@ namespace haier_ac160 {
 
 static const char *const TAG = "haier_ac160";
 
+// Random 32bit value; If this changes existing restore preferences are invalidated
+static const uint32_t RESTORE_STATE_VERSION = 0xA02E6FA4UL;
+
 static const std::string TIMER_OFF_STR = "--";
 
 void HaierAC160::init(uint16_t pin,
-        const bool recovery, const bool inverted) {
-    if (recovery) {
-        ESP_LOGI(TAG, "Configuration items have been restored");
-    } else {
-        ESP_LOGI(TAG,
-            "The configuration was not restored because it was %s but %s.",
-            recovery ? "enabled" : "disabled");
-    }
-
+        const bool need_restore, const bool inverted) {
     ac_ = new IRHaierAC160(pin, inverted);
     ac_->begin();
-    ac_->stateReset();
+
+    this->need_restore_ = need_restore;
+    if (this->need_restore_) {
+        this->restore_state_();
+    } else {
+        ESP_LOGI(TAG, "The HaierAC160 protocol recovery has been disabled.");
+        ac_->stateReset();
+    }
 
     ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
     ESP_LOGD(TAG, "  %s\n", ac_->toString().c_str());
 }
 
+bool HaierAC160::restore_state_() {
+    if (!this->need_restore_) return false;
+
+    this->rtc_ = global_preferences->make_preference<HaierAc160Protocol>(
+        this->get_preference_hash() ^ RESTORE_STATE_VERSION
+    );
+    HaierAc160Protocol protocol{};
+    if (this->rtc_.load(&protocol)) {
+        ac_->setRaw(protocol.raw);
+        ESP_LOGI(TAG, "HaierAC160 protocol have been restored.");
+        this->temperature_nu_->make_call().set_value(ac_->getTemp());
+        this->power_sw_->control(ac_->getPower());
+        this->sleep_sw_->control(ac_->getSleep());
+        this->lock_sw_->control(ac_->getLock());
+        this->display_sw_->control(ac_->getLightToggle());
+        this->aux_heating_sw_->control(ac_->getAuxHeating());
+        this->self_clean_sw_->control(ac_->getClean());
+        this->turbo_sw_->control(ac_->getTurbo());
+        this->quiet_sw_->control(ac_->getQuiet());
+        this->health_sw_->control(ac_->getHealth());
+        this->operate_mode_se_->make_call().set_option(
+            Converts::get_operate_mode_str(
+                static_cast<HaierAC160OperateMode>(ac_->getMode()))
+        );
+        this->fan_speed_se_->make_call().set_option(
+            Converts::get_fan_speed_str(
+                static_cast<HaierAC160FanSpeed>(ac_->getFan()))
+        );
+        this->swing_mode_se_->make_call().set_option(
+            Converts::get_swing_mode_str(
+                static_cast<HaierAC160SwingMode>(ac_->getSwingV()))
+        );
+        ac_->setTimerMode(kHaierAcYrw02NoTimers);
+        this->on_timer_hour_se_->make_call().set_index(0);
+        this->on_timer_minute_se_->make_call().set_index(0);
+        this->off_timer_hour_se_->make_call().set_index(0);
+        this->off_timer_minute_se_->make_call().set_index(0);
+        return true;
+    } else {
+        ESP_LOGE(TAG, "Failed to restore HaierAC160 protocol.");
+        return false;
+    }
+}
+
 void HaierAC160::perform() {
-    if (ac_->getPower())
-        ac_->send();
+    if (ac_->getPower()) ac_->send();
+    if (this->need_restore_) this->rtc_.save(ac_->getRaw());
 
     ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
     ESP_LOGD(TAG, "  %s", ac_->toString().c_str());
@@ -295,46 +341,92 @@ void HaierAC160::set_fan_speed_select(HaierAC160Select *fan_speed_se) {
     );
 }
 
-void HaierAC160::timer_select_handler() {
-    uint16_t total_mins = this->timer_hour_num * 60 +
-        this->timer_minute_num;
-    ESP_LOGD(TAG, "Timer wae select as %02d:%02d, "
+void HaierAC160::on_timer_select_handler() {
+    uint16_t total_mins = this->on_timer_hour_num * 60 +
+        this->on_timer_minute_num;
+    ESP_LOGD(TAG, "On Timer wae select as %02d:%02d, "
             "The AC will turn off in %d minutes.",
-            this->timer_hour_num, this->timer_minute_num, total_mins);
+            this->on_timer_hour_num, this->on_timer_minute_num,
+            total_mins);
+
+    ac_->setOnTimer(total_mins);
+    this->perform();
+
+    if (total_mins == 0) {
+        this->on_timer_hour_se_->make_call().set_index(0);
+        this->on_timer_minute_se_->make_call().set_index(0);
+    }
+}
+
+void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
+    this->on_timer_hour_se_ = on_timer_hour_se;
+    this->on_timer_hour_se_->set_callback_handler(
+        [this](const std::string &hour_str) -> void {
+            ESP_LOGD(TAG,
+                "On Timer Hour was selected as %s with step %d", hour_str);
+
+            if (hour_str == TIMER_OFF_STR) this->on_timer_hour_num = 0;
+            else this->on_timer_hour_num = std::stoi(hour_str);
+            this->on_timer_select_handler();
+        }
+    );
+}
+
+void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se) {
+    this->on_timer_minute_se_ = on_timer_minute_se;
+    this->on_timer_minute_se_->set_callback_handler(
+        [this](const std::string &min_str) -> void {
+            ESP_LOGD(TAG,
+                "On Timer Minute was selected as %s with step %d", min_str);
+
+            if (min_str == TIMER_OFF_STR) this->on_timer_minute_num = 0;
+            else this->on_timer_minute_num = std::stoi(min_str);
+            this->on_timer_select_handler();
+        }
+    );
+}
+
+void HaierAC160::off_timer_select_handler() {
+    uint16_t total_mins = this->off_timer_hour_num * 60 +
+        this->off_timer_minute_num;
+    ESP_LOGD(TAG, "Off Timer wae select as %02d:%02d, "
+            "The AC will turn off in %d minutes.",
+            this->off_timer_hour_num, this->off_timer_minute_num,
+            total_mins);
 
     ac_->setOffTimer(total_mins);
     this->perform();
 
     if (total_mins == 0) {
-        this->timer_hour_se_->make_call().set_index(0);
-        this->timer_minute_se_->make_call().set_index(0);
+        this->off_timer_hour_se_->make_call().set_index(0);
+        this->off_timer_minute_se_->make_call().set_index(0);
     }
 }
 
-void HaierAC160::set_timer_hour_select(HaierAC160Select *timer_hour_se) {
-    this->timer_hour_se_ = timer_hour_se;
-    this->timer_hour_se_->set_callback_handler(
+void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) {
+    this->off_timer_hour_se_ = off_timer_hour_se;
+    this->off_timer_hour_se_->set_callback_handler(
         [this](const std::string &hour_str) -> void {
-            ESP_LOGD(TAG, "Timer Hour was selected as %s with step %d",
-                hour_str, this->timer_hour_step);
+            ESP_LOGD(TAG,
+                "Off Timer Hour was selected as %s with step %d", hour_str);
 
-            if (hour_str == TIMER_OFF_STR) this->timer_hour_num = 0;
-            else this->timer_hour_num = std::stoi(hour_str);
-            this->timer_select_handler();
+            if (hour_str == TIMER_OFF_STR) this->off_timer_hour_num = 0;
+            else this->off_timer_hour_num = std::stoi(hour_str);
+            this->off_timer_select_handler();
         }
     );
 }
 
-void HaierAC160::set_timer_minute_select(HaierAC160Select *timer_minute_se) {
-    this->timer_minute_se_ = timer_minute_se;
-    this->timer_minute_se_->set_callback_handler(
+void HaierAC160::set_off_timer_minute_select(HaierAC160Select *off_timer_minute_se) {
+    this->off_timer_minute_se_ = off_timer_minute_se;
+    this->off_timer_minute_se_->set_callback_handler(
         [this](const std::string &min_str) -> void {
-            ESP_LOGD(TAG, "Timer Minute was selected as %s with step %d",
-                min_str, this->timer_minute_step);
+            ESP_LOGD(TAG, "Off Timer Minute was selected as %s with step %d",
+                min_str);
 
-            if (min_str == TIMER_OFF_STR) this->timer_minute_num = 0;
-            else this->timer_minute_num = std::stoi(min_str);
-            this->timer_select_handler();
+            if (min_str == TIMER_OFF_STR) this->off_timer_minute_num = 0;
+            else this->off_timer_minute_num = std::stoi(min_str);
+            this->off_timer_select_handler();
         }
     );
 }

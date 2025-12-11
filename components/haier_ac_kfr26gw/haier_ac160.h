@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/preferences.h"
 #include "esphome/core/log.h"
 
 #include "haier_ac_adapter.h"
@@ -11,13 +12,14 @@
 namespace esphome {
 namespace haier_ac160 {
 
-class HaierAC160 : public Component {
+class HaierAC160 : public Component, public EntityBase {
     public:
         HaierAC160() {}
 
         void init(uint16_t pin, const bool recovery = true,
             const bool inverted = false);
 
+        bool restore_state_();
         void perform();
 
         void set_temperature_number(HaierAC160Number *temperature_nu);
@@ -35,15 +37,15 @@ class HaierAC160 : public Component {
         void set_operate_mode_select(HaierAC160Select *operate_mode_se_);
         void set_swing_mode_select(HaierAC160Select *swing_mode_se);
         void set_fan_speed_select(HaierAC160Select *fan_speed_se);
-        void set_timer_hour_step(uint8_t step)
-            { this->timer_hour_step = step; }
-        void set_timer_hour_select(HaierAC160Select *timer_hour_se);
-        void set_timer_minute_step(uint8_t step)
-            { this->timer_minute_step = step; }
-        void set_timer_minute_select(HaierAC160Select *timer_minute_se);
+        void set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se);
+        void set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se);
+        void set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se);
+        void set_off_timer_minute_select(HaierAC160Select *off_timer_minute_se);
 
     protected:
         IRHaierAC160 *ac_{nullptr};
+        ESPPreferenceObject rtc_;
+        bool need_restore_{false};
 
         HaierAC160Number *temperature_nu_{nullptr};
 
@@ -60,12 +62,14 @@ class HaierAC160 : public Component {
         HaierAC160Select *operate_mode_se_{nullptr};
         HaierAC160Select *fan_speed_se_{nullptr};
         HaierAC160Select *swing_mode_se_{nullptr};
-        uint8_t timer_hour_step{1};
-        uint8_t timer_hour_num{0};
-        HaierAC160Select *timer_hour_se_{nullptr};
-        uint8_t timer_minute_step{1};
-        uint8_t timer_minute_num{0};
-        HaierAC160Select *timer_minute_se_{nullptr};
+        uint8_t on_timer_hour_num{0};
+        HaierAC160Select *on_timer_hour_se_{nullptr};
+        uint8_t on_timer_minute_num{0};
+        HaierAC160Select *on_timer_minute_se_{nullptr};
+        uint8_t off_timer_hour_num{0};
+        HaierAC160Select *off_timer_hour_se_{nullptr};
+        uint8_t off_timer_minute_num{0};
+        HaierAC160Select *off_timer_minute_se_{nullptr};
 
         void temperature_number_handler(uint8_t temp);
 
@@ -82,9 +86,12 @@ class HaierAC160 : public Component {
         void operate_mode_select_handler(HaierAC160OperateMode op_mode);
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
         void fan_speed_select_handler(HaierAC160FanSpeed fan_speed);
-        void timer_select_handler();
-        void timer_hour_select_handler(uint8_t hour);
-        void timer_minute_select_handler(uint8_t minute);
+        void on_timer_select_handler();
+        void on_timer_hour_select_handler(uint8_t hour);
+        void on_timer_minute_select_handler(uint8_t minute);
+        void off_timer_select_handler();
+        void off_timer_hour_select_handler(uint8_t hour);
+        void off_timer_minute_select_handler(uint8_t minute);
 };
 
 }  // namespace haier_ac160
