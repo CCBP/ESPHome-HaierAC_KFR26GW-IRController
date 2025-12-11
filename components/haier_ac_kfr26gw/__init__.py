@@ -57,7 +57,7 @@ OPERATE_MODE = [
 ]
 
 SWING_MODE = [
-    "Off"
+    "Off",
     "Auto",
     "Top",
     "Highest",
