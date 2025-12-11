@@ -2,6 +2,8 @@
 
 #include <map>
 
+#include "esphome/core/helpers.h"
+
 #include "ir_Haier.h"
 
 namespace esphome {
@@ -36,8 +38,8 @@ enum HaierAC160FanSpeed : uint8_t {
 class Converts {
     public:
         template <typename EnumT>
-        static const char *const get_enum_str(EnumT key,
-                const std::map<EnumT, const char *> &table) {
+        static const std::string get_enum_str(EnumT key,
+                const std::map<EnumT, std::string> &table) {
             auto it = table.find(key);
             if (it != table.end()) {
                 return it->second;
@@ -45,14 +47,31 @@ class Converts {
             return "UNKNOW";
         }
 
+        template <typename EnumT>
+        static std::optional<EnumT> get_enum_by_str(const std::string &str,
+                const std::map<EnumT, std::string> &table_str) {
+            for (const auto table : table_str) {
+                if (str_equals_case_insensitive(str, table.second))
+                    return table.first;
+            }
+            return std::nullopt;
+        }
+
         static const char *const get_operate_mode_str(HaierAC160OperateMode op_mode);
         static const char *const get_swing_mode_str(HaierAC160SwingMode swing_mode);
         static const char *const get_fan_speed_str(HaierAC160FanSpeed fan_speed);
 
+        static std::optional<HaierAC160OperateMode>
+            get_operate_mode_by_str(std::string op_mode_str);
+        static std::optional<HaierAC160SwingMode>
+            get_swing_mode_by_str(std::string swing_mode_str);
+        static std::optional<HaierAC160FanSpeed>
+            get_fan_speed_by_str(std::string fan_speed_str);
+
     private:
-        static std::map<HaierAC160OperateMode, const char *> OPERATE_MODE_STR;
-        static std::map<HaierAC160SwingMode, const char *> SWING_MODE_STR;
-        static std::map<HaierAC160FanSpeed, const char *> FAN_SPEED_STR;
+        static std::map<HaierAC160OperateMode, std::string> OPERATE_MODE_STR;
+        static std::map<HaierAC160SwingMode, std::string> SWING_MODE_STR;
+        static std::map<HaierAC160FanSpeed, std::string> FAN_SPEED_STR;
 };
 
 } // namespace haier_ac160

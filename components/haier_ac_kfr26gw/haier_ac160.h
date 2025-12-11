@@ -28,20 +28,15 @@ class HaierAC160 : public Component {
         void set_display_switch(HaierAC160Switch *display_sw);
         void set_aux_heating_switch(HaierAC160Switch *aux_heating);
 
-        void set_operate_mode_select(
-                HaierAC160Select<HaierAC160OperateMode> *operate_mode_se_);
-        void set_swing_mode_select(
-                HaierAC160Select<HaierAC160SwingMode> *swing_mode_se);
-        void set_fan_speed_select(
-                HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se);
+        void set_operate_mode_select(HaierAC160Select *operate_mode_se_);
+        void set_swing_mode_select(HaierAC160Select *swing_mode_se);
+        void set_fan_speed_select(HaierAC160Select *fan_speed_se);
         void set_timer_hour_step(uint8_t step)
             { this->timer_hour_step = step; }
-        void set_timer_hour_select(
-                HaierAC160Select<uint8_t> *timer_hour_se);
+        void set_timer_hour_select(HaierAC160Select *timer_hour_se);
         void set_timer_minute_step(uint8_t step)
             { this->timer_minute_step = step; }
-        void set_timer_minute_select(
-                HaierAC160Select<uint8_t> *timer_minute_se);
+        void set_timer_minute_select(HaierAC160Select *timer_minute_se);
 
     protected:
         IRHaierAC160 *ac_{nullptr};
@@ -54,13 +49,15 @@ class HaierAC160 : public Component {
         HaierAC160Switch *display_sw_{nullptr};
         HaierAC160Switch *aux_heating_sw_{nullptr};
 
-        HaierAC160Select<HaierAC160OperateMode> *operate_mode_se_{nullptr};
-        HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se_{nullptr};
-        HaierAC160Select<HaierAC160SwingMode> *swing_mode_se_{nullptr};
+        HaierAC160Select *operate_mode_se_{nullptr};
+        HaierAC160Select *fan_speed_se_{nullptr};
+        HaierAC160Select *swing_mode_se_{nullptr};
         uint8_t timer_hour_step{1};
-        HaierAC160Select<uint8_t> *timer_hour_se_{nullptr};
+        uint8_t timer_hour_num{0};
+        HaierAC160Select *timer_hour_se_{nullptr};
         uint8_t timer_minute_step{1};
-        HaierAC160Select<uint8_t> *timer_minute_se_{nullptr};
+        uint8_t timer_minute_num{0};
+        HaierAC160Select *timer_minute_se_{nullptr};
 
         void temperature_number_handler(uint8_t temp);
 

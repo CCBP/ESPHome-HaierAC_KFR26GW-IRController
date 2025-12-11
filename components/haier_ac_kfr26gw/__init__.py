@@ -42,34 +42,31 @@ HaierAC160Switch = haier_ac160_ns.class_(
 HaierAC160Select = haier_ac160_ns.class_(
     "HaierAC160Select", select.Select, cg.Component)
 
-OperateMode = haier_ac160_ns.enum("HaierAC160OperateMode")
-OPERATE_MODE = {
-    "MODE_AUTO" : OperateMode.MODE_AUTO,
-    "MODE_COOL" : OperateMode.MODE_COOL,
-    "MODE_HEAT" : OperateMode.MODE_HEAT,
-    "MODE_DRY"  : OperateMode.MODE_DRY,
-    "MODE_FAN"  : OperateMode.MODE_FAN,
-}
+OPERATE_MODE = [
+    "Auto",
+    "Cool",
+    "Heat",
+    "Dry",
+    "Fan",
+]
 
-SwingMode = haier_ac160_ns.enum("HaierAC160SwingMode")
-SWING_MODE = {
-    "Off"       : SwingMode.SWING_OFF,
-    "Auto"      : SwingMode.SWING_AUTO,
-    "Top"       : SwingMode.SWING_TOP,
-    "Highest"   : SwingMode.SWING_HIGHEST,
-    "High"      : SwingMode.SWING_HIGH,
-    "Middle"    : SwingMode.SWING_MIDDLE,
-    "Low"       : SwingMode.SWING_LOW,
-    "Lowest"    : SwingMode.SWING_LOWEST,
-}
+SWING_MODE = [
+    "Off"
+    "Auto",
+    "Top",
+    "Highest",
+    "High",
+    "Middle",
+    "Low",
+    "Lowest",
+]
 
-FanSpeed = haier_ac160_ns.enum("HaierAC160FanSpeed")
-FAN_SPEED = {
-    "SPEED_AUTO"    : FanSpeed.SPEED_AUTO,
-    "SPEED_LOW"     : FanSpeed.SPEED_LOW,
-    "SPEED_MEDIUM"  : FanSpeed.SPEED_MEDIUM,
-    "SPEED_HIGH"    : FanSpeed.SPEED_HIGH,
-}
+FAN_SPEED = [
+    "Auto",
+    "Low",
+    "Medium",
+    "High",
+]
 
 def select_options_invalid(cfg_name: str):
     return {
@@ -248,35 +245,31 @@ async def to_code(config):
         await cg.register_component(sw, config[conf])
         cg.add(set_func(sw))
 
-    for conf, arg_type, opts, set_func in [
+    for conf, opts, set_func in [
         (
-            CONF_OPERATE_MODE_SELECT, OperateMode,
-            list(OPERATE_MODE.keys()), var.set_operate_mode_select
+            CONF_OPERATE_MODE_SELECT,
+            OPERATE_MODE, var.set_operate_mode_select
         ),
         (
-            CONF_SWING_MODE_SELECT, SwingMode,
-            list(SWING_MODE.keys()), var.set_swing_mode_select
+            CONF_SWING_MODE_SELECT,
+            SWING_MODE, var.set_swing_mode_select
         ),
         (
-            CONF_FAN_SPEED_SELECT, FanSpeed,
-            list(FAN_SPEED.keys()), var.set_fan_speed_select
+            CONF_FAN_SPEED_SELECT,
+            FAN_SPEED, var.set_fan_speed_select
         ),
         (
-            CONF_TIMER_HOUR_SELECT, cg.uint8,
+            CONF_TIMER_HOUR_SELECT,
             generate_timer_options(config[CONF_TIMER_HOUR_SELECT]),
             var.set_timer_hour_select
         ),
         (
-            CONF_TIMER_MINUTE_SELECT, cg.uint8,
+            CONF_TIMER_MINUTE_SELECT,
             generate_timer_options(config[CONF_TIMER_MINUTE_SELECT]),
             var.set_timer_minute_select
         ),
     ]:
-        se = await select.new_select(
-            config[conf],
-            cg.TemplateArguments(arg_type),
-            options=opts,
-        )
+        se = await select.new_select(config[conf], options=opts)
         await cg.register_component(se, config[conf])
         cg.add(set_func(se))
     

@@ -5,6 +5,8 @@ namespace haier_ac160 {
 
 static const char *const TAG = "haier_ac160";
 
+static const std::string TIMER_OFF_STR = "--";
+
 void HaierAC160::init(uint16_t pin,
         const bool recovery, const bool inverted) {
     if (recovery) {
@@ -147,78 +149,82 @@ void HaierAC160::set_aux_heating_switch(
 
 void HaierAC160::operate_mode_select_handler(
         HaierAC160OperateMode op_mode) {
-    ESP_LOGD(TAG, "Operate Mode was selected as %s",
-        Converts::get_operate_mode_str(op_mode));
-
     if (op_mode != ac_->getMode()) {
         ac_->setMode(op_mode);
         this->perform();
     }
 }
 
-void HaierAC160::set_operate_mode_select(
-        HaierAC160Select<HaierAC160OperateMode> *operate_mode_se) {
+void HaierAC160::set_operate_mode_select(HaierAC160Select *operate_mode_se) {
     this->operate_mode_se_ = operate_mode_se;
     this->operate_mode_se_->set_callback_handler(
-        [this](HaierAC160OperateMode op_mode) -> void {
-            this->operate_mode_select_handler(op_mode);
+        [this](const std::string &op_mode_str) -> void {
+            ESP_LOGD(TAG, "Operate Mode was selected as %s",
+                op_mode_str.c_str());
+
+            auto op_mode = Converts::get_operate_mode_by_str(op_mode_str);
+            if (op_mode.has_value())
+                this->operate_mode_select_handler(*op_mode);
+            else
+                ESP_LOGE(TAG, "Operate Mode '%s' is invalid", op_mode_str);
         }
     );
 }
 
 void HaierAC160::swing_mode_select_handler(
         HaierAC160SwingMode swing_mode) {
-    ESP_LOGD(TAG, "Swing Mode was selected as %s",
-        Converts::get_swing_mode_str(swing_mode));
-
     if (swing_mode != ac_->getSwingV()) {
         ac_->setSwingV(swing_mode);
         this->perform();
     }
 }
 
-void HaierAC160::set_swing_mode_select(
-        HaierAC160Select<HaierAC160SwingMode> *swing_mode_se) {
+void HaierAC160::set_swing_mode_select(HaierAC160Select *swing_mode_se) {
     this->swing_mode_se_ = swing_mode_se;
     this->swing_mode_se_->set_callback_handler(
-        [this](HaierAC160SwingMode swing_mode) -> void {
-            this->swing_mode_select_handler(swing_mode);
+        [this](const std::string &swing_mode_str) -> void {
+            ESP_LOGD(TAG, "Swing Mode was selected as %s",
+                swing_mode_str.c_str());
+
+            auto swing_mode = Converts::get_swing_mode_by_str(swing_mode_str);
+            if (swing_mode.has_value())
+                this->swing_mode_select_handler(*swing_mode);
+            else
+                ESP_LOGE(TAG, "Swing Mode '%s' is invalid", swing_mode_str);
         }
     );
 }
 
 void HaierAC160::fan_speed_select_handler(
         HaierAC160FanSpeed fan_speed) {
-    ESP_LOGD(TAG, "Fan Speed was selected as %s",
-        Converts::get_fan_speed_str(fan_speed));
-
     if (fan_speed != ac_->getFan()) {
         ac_->setFan(fan_speed);
         this->perform();
     }
 }
 
-void HaierAC160::set_fan_speed_select(
-        HaierAC160Select<HaierAC160FanSpeed> *fan_speed_se) {
+void HaierAC160::set_fan_speed_select(HaierAC160Select *fan_speed_se) {
     this->fan_speed_se_ = fan_speed_se;
     this->fan_speed_se_->set_callback_handler(
-        [this](HaierAC160FanSpeed fan_speed) -> void {
-            this->fan_speed_select_handler(fan_speed);
+        [this](const std::string &fan_speed_str) -> void {
+            ESP_LOGD(TAG, "Fan Speed was selected as %s",
+                fan_speed_str.c_str());
+
+            auto fan_speed = Converts::get_fan_speed_by_str(fan_speed_str);
+            if (fan_speed.has_value())
+                this->fan_speed_select_handler(*fan_speed);
+            else
+                ESP_LOGE(TAG, "Fan Speed '%s' is invalid", fan_speed_str);
         }
     );
 }
 
 void HaierAC160::timer_select_handler() {
-    uint8_t hour = this->timer_hour_se_->active_index().value_or(0);
-    if (hour != 0) // subtract "--" from the index
-        hour = this->timer_hour_step * (hour - 1);
-    uint8_t minute = this->timer_minute_se_->active_index().value_or(0);
-    if (minute != 0) // subtract "--" from the index
-        minute = this->timer_minute_step * (minute - 1);
-    uint16_t total_mins = hour * 60 + minute;
+    uint16_t total_mins = this->timer_hour_num * 60 +
+        this->timer_minute_num;
     ESP_LOGD(TAG, "Timer wae select as %02d:%02d, "
             "The AC will turn off in %d minutes.",
-            hour, minute, total_mins);
+            this->timer_hour_num, this->timer_minute_num, total_mins);
 
     ac_->setOffTimer(total_mins);
     this->perform();
@@ -229,29 +235,29 @@ void HaierAC160::timer_select_handler() {
     }
 }
 
-void HaierAC160::set_timer_hour_select(
-        HaierAC160Select<uint8_t> *timer_hour_se) {
+void HaierAC160::set_timer_hour_select(HaierAC160Select *timer_hour_se) {
     this->timer_hour_se_ = timer_hour_se;
     this->timer_hour_se_->set_callback_handler(
-        [this](uint8_t hour) -> void {
-            const char *hour_str = this->timer_hour_se_->option_at(hour);
+        [this](const std::string &hour_str) -> void {
             ESP_LOGD(TAG, "Timer Hour was selected as %s with step %d",
                 hour_str, this->timer_hour_step);
 
+            if (hour_str == TIMER_OFF_STR) this->timer_hour_num = 0;
+            else this->timer_hour_num = std::stoi(hour_str);
             this->timer_select_handler();
         }
     );
 }
 
-void HaierAC160::set_timer_minute_select(
-        HaierAC160Select<uint8_t> *timer_minute_se) {
+void HaierAC160::set_timer_minute_select(HaierAC160Select *timer_minute_se) {
     this->timer_minute_se_ = timer_minute_se;
     this->timer_minute_se_->set_callback_handler(
-        [this](uint8_t minute) -> void {
-            const char *min_str = this->timer_minute_se_->option_at(minute);
+        [this](const std::string &min_str) -> void {
             ESP_LOGD(TAG, "Timer Minute was selected as %s with step %d",
-
                 min_str, this->timer_minute_step);
+
+            if (min_str == TIMER_OFF_STR) this->timer_minute_num = 0;
+            else this->timer_minute_num = std::stoi(min_str);
             this->timer_select_handler();
         }
     );
