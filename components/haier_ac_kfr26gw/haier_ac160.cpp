@@ -73,7 +73,12 @@ bool HaierAC160::restore_state_() {
 
 void HaierAC160::perform() {
     if (ac_->getPower()) ac_->send();
-    if (this->need_restore_) this->rtc_.save(ac_->getRaw());
+    if (this->need_restore_) {
+        if (this->rtc_.save(ac_->getRaw()))
+            ESP_LOGD(TAG, "Current state has been saved.");
+        else
+            ESP_LOGE(TAG, "Failed to save current state.");
+    }
 
     ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
     ESP_LOGD(TAG, "  %s", ac_->toString().c_str());
@@ -407,8 +412,7 @@ void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) 
     this->off_timer_hour_se_ = off_timer_hour_se;
     this->off_timer_hour_se_->set_callback_handler(
         [this](const std::string &hour_str) -> void {
-            ESP_LOGD(TAG,
-                "Off Timer Hour was selected as %s with step %d", hour_str);
+            ESP_LOGD(TAG, "Off Timer Hour was selected as %s", hour_str.c_str());
 
             if (hour_str == TIMER_OFF_STR) this->off_timer_hour_num = 0;
             else this->off_timer_hour_num = std::stoi(hour_str);
@@ -421,8 +425,7 @@ void HaierAC160::set_off_timer_minute_select(HaierAC160Select *off_timer_minute_
     this->off_timer_minute_se_ = off_timer_minute_se;
     this->off_timer_minute_se_->set_callback_handler(
         [this](const std::string &min_str) -> void {
-            ESP_LOGD(TAG, "Off Timer Minute was selected as %s with step %d",
-                min_str);
+            ESP_LOGD(TAG, "Off Timer Minute was selected as %s", min_str.c_str());
 
             if (min_str == TIMER_OFF_STR) this->off_timer_minute_num = 0;
             else this->off_timer_minute_num = std::stoi(min_str);
