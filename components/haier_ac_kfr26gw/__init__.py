@@ -83,14 +83,14 @@ def select_options_invalid(cfg_name: str):
 CONFIG_TIMER_HOUR_SCHEMA = {
     cv.Optional(CONF_MIN_VALUE, default=0): cv.int_range(min=0, max=23),
     cv.Optional(CONF_MAX_VALUE, default=23): cv.int_range(min=0, max=23),
-    cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=23),
+    cv.Optional(CONF_STEP, default=1): cv.int_range(min=1, max=23),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
 }
 
 CONFIG_TIMER_MINUTE_SCHEMA = {
     cv.Optional(CONF_MIN_VALUE, default=0): cv.int_range(min=0, max=59),
     cv.Optional(CONF_MAX_VALUE, default=59): cv.int_range(min=0, max=59),
-    cv.Optional(CONF_STEP, default=1): cv.int_range(min=0, max=59),
+    cv.Optional(CONF_STEP, default=1): cv.int_range(min=1, max=59),
     cv.Optional(CONF_INITIAL_VALUE, default="--"): cv.string,
 }
 
@@ -115,7 +115,8 @@ CONFIG_SCHEMA = cv.All(
                         cv.int_range(min=16, max=30),
                     cv.Optional(CONF_INITIAL_VALUE, default=25):
                         cv.int_range(min=16, max=30),
-                    cv.Optional(CONF_STEP, default=1): cv.int_,
+                    cv.Optional(CONF_STEP, default=1):
+                        cv.int_range(min=1, max=30-16),
                 }
             ),
             key=CONF_NAME,
@@ -129,56 +130,48 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_SLEEP_SWITCH,
-            default={ CONF_NAME: "Sleep" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_LOCK_SWITCH,
-            default={ CONF_NAME: "Lock" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_DISPLAY_SWITCH,
-            default={ CONF_NAME: "Display" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_AUX_HEATING_SWITCH,
-            default={ CONF_NAME: "Auxiliary Heating" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_SELF_CLEAN_SWITCH,
-            default={ CONF_NAME: "Self Clean" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_TURBO_SWITCH,
-            default={ CONF_NAME: "Turbo" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_QUIET_SWITCH,
-            default={ CONF_NAME: "Quiet" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_HEALTH_SWITCH,
-            default={ CONF_NAME: "Health" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
@@ -193,7 +186,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_SWING_MODE_SELECT,
-            default={ CONF_NAME: "Swing Mode" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(select_options_invalid(CONF_SWING_MODE_SELECT)),
@@ -201,7 +193,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_FAN_SPEED_SELECT,
-            default={ CONF_NAME: "Fan Speed" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
@@ -209,7 +200,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_ON_TIMER_HOUR_SELECT,
-            default={ CONF_NAME: "On Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_HOUR_SCHEMA)
@@ -218,7 +208,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_ON_TIMER_MINUTE_SELECT,
-            default={ CONF_NAME: "On Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_MINUTE_SCHEMA)
@@ -227,7 +216,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_OFF_TIMER_HOUR_SELECT,
-            default={ CONF_NAME: "Off Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_HOUR_SCHEMA)
@@ -236,7 +224,6 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_OFF_TIMER_MINUTE_SELECT,
-            default={ CONF_NAME: "Off Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_MINUTE_SCHEMA)
@@ -274,14 +261,15 @@ async def to_code(config):
     for conf, set_func in [
         ( CONF_TEMPERATURE_NUMBER, var.set_temperature_number ),
     ]:
-        nu = await number.new_number(
-            config[conf],
-            min_value=config[conf][CONF_MIN_VALUE],
-            max_value=config[conf][CONF_MAX_VALUE],
-            step=config[conf][CONF_STEP],
-        )
-        await cg.register_component(nu, config[conf])
-        cg.add(set_func(nu))
+        if conf in config:
+            nu = await number.new_number(
+                config[conf],
+                min_value=config[conf][CONF_MIN_VALUE],
+                max_value=config[conf][CONF_MAX_VALUE],
+                step=config[conf][CONF_STEP],
+            )
+            await cg.register_component(nu, config[conf])
+            cg.add(set_func(nu))
 
     for conf, set_func in [
         ( CONF_POWER_SWITCH, var.set_power_switch ),
@@ -294,9 +282,10 @@ async def to_code(config):
         ( CONF_QUIET_SWITCH, var.set_quiet_switch ),
         ( CONF_HEALTH_SWITCH, var.set_health_switch ),
     ]:
-        sw = await switch.new_switch(config[conf])
-        await cg.register_component(sw, config[conf])
-        cg.add(set_func(sw))
+        if conf in config:
+            sw = await switch.new_switch(config[conf])
+            await cg.register_component(sw, config[conf])
+            cg.add(set_func(sw))
 
     for conf, opts, set_func in [
         (
@@ -313,28 +302,33 @@ async def to_code(config):
         ),
         (
             CONF_ON_TIMER_HOUR_SELECT,
-            generate_timer_options(config[CONF_ON_TIMER_HOUR_SELECT], True),
+            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
+                generate_timer_options(config[CONF_ON_TIMER_HOUR_SELECT], True),
             var.set_on_timer_hour_select
         ),
         (
             CONF_ON_TIMER_MINUTE_SELECT,
-            generate_timer_options(config[CONF_ON_TIMER_MINUTE_SELECT], False),
+            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
+                generate_timer_options(config[CONF_ON_TIMER_MINUTE_SELECT], False),
             var.set_on_timer_minute_select
         ),
         (
             CONF_OFF_TIMER_HOUR_SELECT,
-            generate_timer_options(config[CONF_OFF_TIMER_HOUR_SELECT], True),
+            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
+                generate_timer_options(config[CONF_OFF_TIMER_HOUR_SELECT], True),
             var.set_off_timer_hour_select
         ),
         (
             CONF_OFF_TIMER_MINUTE_SELECT,
-            generate_timer_options(config[CONF_OFF_TIMER_MINUTE_SELECT], False),
+            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
+                generate_timer_options(config[CONF_OFF_TIMER_MINUTE_SELECT], False),
             var.set_off_timer_minute_select
         ),
     ]:
-        se = await select.new_select(config[conf], options=opts)
-        await cg.register_component(se, config[conf])
-        cg.add(set_func(se))
+        if conf in config:
+            se = await select.new_select(config[conf], options=opts)
+            await cg.register_component(se, config[conf])
+            cg.add(set_func(se))
     
     cg.add(var.init(config[CONF_PIN],
         config[CONF_RESTORE_STATE], config[CONF_INVERTED]))
