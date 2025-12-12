@@ -357,10 +357,12 @@ void HaierAC160::on_timer_select_handler() {
     ac_->setOnTimer(total_mins);
     this->perform();
 
-    if (total_mins == 0) {
+    this->set_timeout("on_timer", total_mins * 60, [this]() {
         this->on_timer_hour_se_->make_call().set_index(0);
         this->on_timer_minute_se_->make_call().set_index(0);
-    }
+        ac_->setPower(true);
+        this->power_sw_->control(ac_->getPower());
+    });
 }
 
 void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
@@ -402,10 +404,12 @@ void HaierAC160::off_timer_select_handler() {
     ac_->setOffTimer(total_mins);
     this->perform();
 
-    if (total_mins == 0) {
+    this->set_timeout("off_timer", total_mins * 60, [this]() {
         this->off_timer_hour_se_->make_call().set_index(0);
         this->off_timer_minute_se_->make_call().set_index(0);
-    }
+        ac_->setPower(false);
+        this->power_sw_->control(ac_->getPower());
+    });
 }
 
 void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) {
