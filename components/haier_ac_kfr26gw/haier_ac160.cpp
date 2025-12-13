@@ -371,7 +371,7 @@ void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
     this->on_timer_hour_se_->set_callback_handler(
         [this](const std::string &hour_str) -> void {
             ESP_LOGD(TAG,
-                "On Timer Hour was selected as %s with step %d", hour_str);
+                "On Timer Hour was selected as %s", hour_str.c_str());
 
             if (hour_str == TIMER_OFF_STR) this->on_timer_hour_num = 0;
             else this->on_timer_hour_num = std::stoi(hour_str);
@@ -385,7 +385,7 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
     this->on_timer_minute_se_->set_callback_handler(
         [this](const std::string &min_str) -> void {
             ESP_LOGD(TAG,
-                "On Timer Minute was selected as %s with step %d", min_str);
+                "On Timer Minute was selected as %s", min_str.c_str());
 
             if (min_str == TIMER_OFF_STR) this->on_timer_minute_num = 0;
             else this->on_timer_minute_num = std::stoi(min_str);
