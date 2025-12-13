@@ -71,8 +71,8 @@ bool HaierAC160::restore_state_() {
     }
 }
 
-void HaierAC160::perform() {
-    if (ac_->getPower()) ac_->send();
+void HaierAC160::perform(bool ignore_power) {
+    if (ignore_power || ac_->getPower()) ac_->send();
     if (this->need_restore_) {
         if (this->rtc_.save(ac_->getRaw()))
             ESP_LOGD(TAG, "Current state has been saved.");
@@ -108,7 +108,7 @@ void HaierAC160::power_switch_handler(bool state) {
 
     if (state != ac_->getPower()) {
         ac_->setPower(state);
-        this->perform();
+        this->perform(true);
     }
 }
 
@@ -355,7 +355,7 @@ void HaierAC160::on_timer_select_handler() {
             total_mins);
 
     ac_->setOnTimer(total_mins);
-    this->perform();
+    this->perform(true);
 
     this->set_timeout("on_timer", total_mins * 60, [this]() {
         this->on_timer_hour_se_->make_call().set_index(0);
