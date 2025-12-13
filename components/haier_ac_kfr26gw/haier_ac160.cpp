@@ -357,7 +357,8 @@ void HaierAC160::on_timer_select_handler() {
     ac_->setOnTimer(total_mins);
     this->perform(true);
 
-    this->set_timeout("on_timer", total_mins * 60, [this]() {
+    this->set_timeout("on_timer", total_mins * 60 * 1000, [this]() {
+        ESP_LOGI(TAG, "The air conditioner has been turned on.");
         this->on_timer_hour_se_->make_call().set_index(0);
         this->on_timer_minute_se_->make_call().set_index(0);
         ac_->setPower(true);
@@ -404,7 +405,8 @@ void HaierAC160::off_timer_select_handler() {
     ac_->setOffTimer(total_mins);
     this->perform();
 
-    this->set_timeout("off_timer", total_mins * 60, [this]() {
+    this->set_timeout("off_timer", total_mins * 60 * 1000, [this]() {
+        ESP_LOGI(TAG, "The air conditioner has been turned off.");
         this->off_timer_hour_se_->make_call().set_index(0);
         this->off_timer_minute_se_->make_call().set_index(0);
         ac_->setPower(false);
