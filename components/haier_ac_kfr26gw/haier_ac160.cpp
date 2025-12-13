@@ -373,9 +373,12 @@ void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
             ESP_LOGD(TAG,
                 "On Timer Hour was selected as %s", hour_str.c_str());
 
-            if (hour_str == TIMER_OFF_STR) this->on_timer_hour_num = 0;
-            else this->on_timer_hour_num = std::stoi(hour_str);
-            this->on_timer_select_handler();
+            if (hour_str == TIMER_OFF_STR) {
+                this->on_timer_hour_num = 0;
+            } else {
+                this->on_timer_hour_num = std::stoi(hour_str);
+                this->on_timer_select_handler();
+            }
         }
     );
 }
@@ -387,9 +390,12 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
             ESP_LOGD(TAG,
                 "On Timer Minute was selected as %s", min_str.c_str());
 
-            if (min_str == TIMER_OFF_STR) this->on_timer_minute_num = 0;
-            else this->on_timer_minute_num = std::stoi(min_str);
-            this->on_timer_select_handler();
+            if (min_str == TIMER_OFF_STR) {
+                this->on_timer_minute_num = 0;
+            } else {
+                this->on_timer_minute_num = std::stoi(min_str);
+                this->on_timer_select_handler();
+            }
         }
     );
 }
@@ -420,9 +426,12 @@ void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) 
         [this](const std::string &hour_str) -> void {
             ESP_LOGD(TAG, "Off Timer Hour was selected as %s", hour_str.c_str());
 
-            if (hour_str == TIMER_OFF_STR) this->off_timer_hour_num = 0;
-            else this->off_timer_hour_num = std::stoi(hour_str);
-            this->off_timer_select_handler();
+            if (hour_str == TIMER_OFF_STR) {
+                this->off_timer_hour_num = 0;
+            } else {
+                this->off_timer_hour_num = std::stoi(hour_str);
+                this->off_timer_select_handler();
+            }
         }
     );
 }
@@ -433,9 +442,12 @@ void HaierAC160::set_off_timer_minute_select(HaierAC160Select *off_timer_minute_
         [this](const std::string &min_str) -> void {
             ESP_LOGD(TAG, "Off Timer Minute was selected as %s", min_str.c_str());
 
-            if (min_str == TIMER_OFF_STR) this->off_timer_minute_num = 0;
-            else this->off_timer_minute_num = std::stoi(min_str);
-            this->off_timer_select_handler();
+            if (min_str == TIMER_OFF_STR) {
+                this->off_timer_minute_num = 0;
+            } else {
+                this->off_timer_minute_num = std::stoi(min_str);
+                this->off_timer_select_handler();
+            }
         }
     );
 }
