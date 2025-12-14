@@ -6,7 +6,7 @@ namespace haier_ac160 {
 std::map<HaierAC160OperateMode, std::string>
 Converts::OPERATE_MODE_STR = {
     { MODE_AUTO, "Auto" },
-    { MODE_COOL, "Coll" },
+    { MODE_COOL, "Cool" },
     { MODE_HEAT, "Heat" },
     { MODE_DRY, "Dry" },
     { MODE_FAN, "Fan" },
@@ -32,19 +32,19 @@ Converts::FAN_SPEED_STR = {
     { SPEED_HIGH, "High" },
 };
 
-const char *const Converts::get_operate_mode_str(
+std::optional<std::string> Converts::get_operate_mode_str(
         HaierAC160OperateMode op_mode) {
-    return get_enum_str(op_mode, OPERATE_MODE_STR).c_str();
+    return get_enum_str(op_mode, OPERATE_MODE_STR);
 }
 
-const char *const Converts::get_swing_mode_str(
+std::optional<std::string> Converts::get_swing_mode_str(
         HaierAC160SwingMode swing_mode) {
-    return get_enum_str(swing_mode, SWING_MODE_STR).c_str();
+    return get_enum_str(swing_mode, SWING_MODE_STR);
 }
 
-const char *const Converts::get_fan_speed_str(
+std::optional<std::string> Converts::get_fan_speed_str(
         HaierAC160FanSpeed fan_speed) {
-    return get_enum_str(fan_speed, FAN_SPEED_STR).c_str();
+    return get_enum_str(fan_speed, FAN_SPEED_STR);
 }
 
 std::optional<HaierAC160OperateMode>

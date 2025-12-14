@@ -86,9 +86,11 @@ class HaierAC160 : public Component, public EntityBase {
         void operate_mode_select_handler(HaierAC160OperateMode op_mode);
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
         void fan_speed_select_handler(HaierAC160FanSpeed fan_speed);
+        void disable_on_timer();
         void on_timer_select_handler();
         void on_timer_hour_select_handler(uint8_t hour);
         void on_timer_minute_select_handler(uint8_t minute);
+        void disable_off_timer();
         void off_timer_select_handler();
         void off_timer_hour_select_handler(uint8_t hour);
         void off_timer_minute_select_handler(uint8_t minute);

@@ -9,6 +9,10 @@
 namespace esphome {
 namespace haier_ac160 {
 
+struct HaierAC160ProtocolRestore {
+    uint8_t state[kHaierAC160StateLength];
+};
+
 enum HaierAC160OperateMode : uint8_t {
     MODE_AUTO = kHaierAcYrw02Auto,
     MODE_COOL = kHaierAcYrw02Cool,
@@ -37,29 +41,38 @@ enum HaierAC160FanSpeed : uint8_t {
 
 class Converts {
     public:
+        static std::map<HaierAC160OperateMode, std::string> OPERATE_MODE_STR;
+        static std::map<HaierAC160SwingMode, std::string> SWING_MODE_STR;
+        static std::map<HaierAC160FanSpeed, std::string> FAN_SPEED_STR;
+
         template <typename EnumT>
-        static const std::string get_enum_str(EnumT key,
+        static std::optional<std::string>
+        get_enum_str(EnumT key, 
                 const std::map<EnumT, std::string> &table) {
             auto it = table.find(key);
             if (it != table.end()) {
                 return it->second;
             }
-            return "UNKNOW";
+            return std::nullopt;
         }
 
         template <typename EnumT>
-        static std::optional<EnumT> get_enum_by_str(const std::string &str,
-                const std::map<EnumT, std::string> &table_str) {
-            for (const auto table : table_str) {
+        static std::optional<EnumT>
+        get_enum_by_str(const std::string &str,
+                const std::map<EnumT, std::string> &table) {
+            for (const auto table : table) {
                 if (str_equals_case_insensitive(str, table.second))
                     return table.first;
             }
             return std::nullopt;
         }
 
-        static const char *const get_operate_mode_str(HaierAC160OperateMode op_mode);
-        static const char *const get_swing_mode_str(HaierAC160SwingMode swing_mode);
-        static const char *const get_fan_speed_str(HaierAC160FanSpeed fan_speed);
+        static std::optional<std::string>
+            get_operate_mode_str(HaierAC160OperateMode op_mode);
+        static std::optional<std::string>
+            get_swing_mode_str(HaierAC160SwingMode swing_mode);
+        static std::optional<std::string>
+            get_fan_speed_str(HaierAC160FanSpeed fan_speed);
 
         static std::optional<HaierAC160OperateMode>
             get_operate_mode_by_str(std::string op_mode_str);
@@ -67,11 +80,6 @@ class Converts {
             get_swing_mode_by_str(std::string swing_mode_str);
         static std::optional<HaierAC160FanSpeed>
             get_fan_speed_by_str(std::string fan_speed_str);
-
-    private:
-        static std::map<HaierAC160OperateMode, std::string> OPERATE_MODE_STR;
-        static std::map<HaierAC160SwingMode, std::string> SWING_MODE_STR;
-        static std::map<HaierAC160FanSpeed, std::string> FAN_SPEED_STR;
 };
 
 } // namespace haier_ac160

@@ -6,7 +6,7 @@ namespace haier_ac160 {
 static const char *const TAG = "haier_ac160";
 
 // Random 32bit value; If this changes existing restore preferences are invalidated
-static const uint32_t RESTORE_STATE_VERSION = 0xA02E6FA4UL;
+static const uint32_t RESTORE_STATE_VERSION = 0xB01E7FA4UL;
 
 static const std::string TIMER_OFF_STR = "--";
 
@@ -16,12 +16,47 @@ void HaierAC160::init(uint16_t pin,
     ac_->begin();
 
     this->need_restore_ = need_restore;
-    if (this->need_restore_) {
-        this->restore_state_();
-    } else {
-        ESP_LOGI(TAG, "The HaierAC160 protocol recovery has been disabled.");
+    if (!this->need_restore_ || !this->restore_state_()) {
+        ESP_LOGW(TAG,
+            "Since restore is %s, the default settings were used.",
+            this->need_restore_ ? "failed" : "disabled");
         ac_->stateReset();
     }
+    this->temperature_nu_->make_call()
+        .set_value(ac_->getTemp()).perform();
+    this->power_sw_->control(ac_->getPower());
+    this->sleep_sw_->control(ac_->getSleep());
+    this->lock_sw_->control(ac_->getLock());
+    this->display_sw_->control(ac_->getLightToggle());
+    this->aux_heating_sw_->control(ac_->getAuxHeating());
+    this->self_clean_sw_->control(ac_->getClean());
+    this->turbo_sw_->control(ac_->getTurbo());
+    this->quiet_sw_->control(ac_->getQuiet());
+    this->health_sw_->control(ac_->getHealth());
+    this->operate_mode_se_->make_call().with_option(
+        Converts::get_operate_mode_str(
+            static_cast<HaierAC160OperateMode>(ac_->getMode())
+        ).value_or(Converts::OPERATE_MODE_STR[MODE_AUTO])
+    ).perform();
+    this->fan_speed_se_->make_call().with_option(
+        Converts::get_fan_speed_str(
+            static_cast<HaierAC160FanSpeed>(ac_->getFan())
+        ).value_or(Converts::FAN_SPEED_STR[SPEED_AUTO])
+    ).perform();
+    this->swing_mode_se_->make_call().with_option(
+        Converts::get_swing_mode_str(
+            static_cast<HaierAC160SwingMode>(ac_->getSwingV())
+        ).value_or(Converts::SWING_MODE_STR[SWING_AUTO])
+    ).perform();
+    ac_->setTimerMode(kHaierAcYrw02NoTimers);
+    this->on_timer_hour_se_->make_call()
+        .with_index(0).perform();
+    this->on_timer_minute_se_->make_call()
+        .with_index(0).perform();
+    this->off_timer_hour_se_->make_call()
+        .with_index(0).perform();
+    this->off_timer_minute_se_->make_call()
+        .with_index(0).perform();
 
     ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
     ESP_LOGD(TAG, "  %s\n", ac_->toString().c_str());
@@ -30,40 +65,15 @@ void HaierAC160::init(uint16_t pin,
 bool HaierAC160::restore_state_() {
     if (!this->need_restore_) return false;
 
-    this->rtc_ = global_preferences->make_preference<HaierAc160Protocol>(
+    this->rtc_ = global_preferences->make_preference<HaierAC160ProtocolRestore>(
         this->get_preference_hash() ^ RESTORE_STATE_VERSION
     );
-    HaierAc160Protocol protocol{};
+    HaierAC160ProtocolRestore protocol{};
     if (this->rtc_.load(&protocol)) {
-        ac_->setRaw(protocol.raw);
+        ac_->setRaw(protocol.state);
         ESP_LOGI(TAG, "HaierAC160 protocol have been restored.");
-        this->temperature_nu_->make_call().set_value(ac_->getTemp());
-        this->power_sw_->control(ac_->getPower());
-        this->sleep_sw_->control(ac_->getSleep());
-        this->lock_sw_->control(ac_->getLock());
-        this->display_sw_->control(ac_->getLightToggle());
-        this->aux_heating_sw_->control(ac_->getAuxHeating());
-        this->self_clean_sw_->control(ac_->getClean());
-        this->turbo_sw_->control(ac_->getTurbo());
-        this->quiet_sw_->control(ac_->getQuiet());
-        this->health_sw_->control(ac_->getHealth());
-        this->operate_mode_se_->make_call().set_option(
-            Converts::get_operate_mode_str(
-                static_cast<HaierAC160OperateMode>(ac_->getMode()))
-        );
-        this->fan_speed_se_->make_call().set_option(
-            Converts::get_fan_speed_str(
-                static_cast<HaierAC160FanSpeed>(ac_->getFan()))
-        );
-        this->swing_mode_se_->make_call().set_option(
-            Converts::get_swing_mode_str(
-                static_cast<HaierAC160SwingMode>(ac_->getSwingV()))
-        );
-        ac_->setTimerMode(kHaierAcYrw02NoTimers);
-        this->on_timer_hour_se_->make_call().set_index(0);
-        this->on_timer_minute_se_->make_call().set_index(0);
-        this->off_timer_hour_se_->make_call().set_index(0);
-        this->off_timer_minute_se_->make_call().set_index(0);
+        ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
+        ESP_LOGD(TAG, "  %s\n", ac_->toString().c_str());
         return true;
     } else {
         ESP_LOGE(TAG, "Failed to restore HaierAC160 protocol.");
@@ -74,7 +84,7 @@ bool HaierAC160::restore_state_() {
 void HaierAC160::perform(bool ignore_power) {
     if (ignore_power || ac_->getPower()) ac_->send();
     if (this->need_restore_) {
-        if (this->rtc_.save(ac_->getRaw()))
+        if (this->rtc_.save(reinterpret_cast<HaierAC160ProtocolRestore *>(ac_->getRaw())))
             ESP_LOGD(TAG, "Current state has been saved.");
         else
             ESP_LOGE(TAG, "Failed to save current state.");
@@ -107,6 +117,13 @@ void HaierAC160::power_switch_handler(bool state) {
         state ? "ON" : "OFF");
 
     if (state != ac_->getPower()) {
+        /**
+         * If the power is operated manually,
+         * all timers will be turned off.
+         */
+        this->disable_on_timer();
+        this->disable_off_timer();
+
         ac_->setPower(state);
         this->perform(true);
     }
@@ -346,12 +363,30 @@ void HaierAC160::set_fan_speed_select(HaierAC160Select *fan_speed_se) {
     );
 }
 
+void HaierAC160::disable_on_timer() {
+    ac_->setOnTimer(0);
+    this->on_timer_hour_num = 0;
+    this->on_timer_minute_num = 0;
+    this->on_timer_hour_se_->make_call()
+        .with_index(0).perform();
+    this->on_timer_minute_se_->make_call()
+        .with_index(0).perform();
+};
+
 void HaierAC160::on_timer_select_handler() {
+    ESP_LOGD(TAG, "On Timer wae select as %02d:%02d.",
+            this->on_timer_hour_num, this->on_timer_minute_num);
+
+    if ((ac_->getPower() == true) &&
+        (ac_->getTimerMode() != kHaierAcYrw02OffTimer) &&
+        (ac_->getTimerMode() != kHaierAcYrw02OffThenOnTimer)) {
+        ESP_LOGW(TAG, "The air conditioner has been turned on.");
+        this->disable_on_timer();
+        return;
+    }
     uint16_t total_mins = this->on_timer_hour_num * 60 +
         this->on_timer_minute_num;
-    ESP_LOGD(TAG, "On Timer wae select as %02d:%02d, "
-            "The AC will turn off in %d minutes.",
-            this->on_timer_hour_num, this->on_timer_minute_num,
+    ESP_LOGW(TAG, "The AC will turn on in %d minutes.",
             total_mins);
 
     ac_->setOnTimer(total_mins);
@@ -359,10 +394,9 @@ void HaierAC160::on_timer_select_handler() {
 
     this->set_timeout("on_timer", total_mins * 60 * 1000, [this]() {
         ESP_LOGI(TAG, "The air conditioner has been turned on.");
-        this->on_timer_hour_se_->make_call().set_index(0);
-        this->on_timer_minute_se_->make_call().set_index(0);
+        this->disable_on_timer();
         ac_->setPower(true);
-        this->power_sw_->control(ac_->getPower());
+        this->power_sw_->control(true);
     });
 }
 
@@ -400,23 +434,40 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
     );
 }
 
+void HaierAC160::disable_off_timer() {
+    ac_->setOffTimer(0);
+    this->off_timer_hour_num = 0;
+    this->off_timer_minute_num = 0;
+    this->off_timer_hour_se_->make_call()
+        .with_index(0).perform();
+    this->off_timer_minute_se_->make_call()
+        .with_index(0).perform();
+};
+
 void HaierAC160::off_timer_select_handler() {
+    ESP_LOGD(TAG, "Off Timer wae select as %02d:%02d.",
+            this->off_timer_hour_num, this->off_timer_minute_num);
+
+    if ((ac_->getPower() == false) &&
+        (ac_->getTimerMode() != kHaierAcYrw02OnTimer) &&
+        (ac_->getTimerMode() != kHaierAcYrw02OnThenOffTimer)) {
+        ESP_LOGW(TAG, "The air conditioner has been turned off.");
+        this->disable_off_timer();
+        return;
+    }
     uint16_t total_mins = this->off_timer_hour_num * 60 +
         this->off_timer_minute_num;
-    ESP_LOGD(TAG, "Off Timer wae select as %02d:%02d, "
-            "The AC will turn off in %d minutes.",
-            this->off_timer_hour_num, this->off_timer_minute_num,
+    ESP_LOGW(TAG, "The AC will turn off in %d minutes.",
             total_mins);
 
     ac_->setOffTimer(total_mins);
-    this->perform();
+    this->perform(true);
 
     this->set_timeout("off_timer", total_mins * 60 * 1000, [this]() {
         ESP_LOGI(TAG, "The air conditioner has been turned off.");
-        this->off_timer_hour_se_->make_call().set_index(0);
-        this->off_timer_minute_se_->make_call().set_index(0);
+        this->disable_off_timer();
         ac_->setPower(false);
-        this->power_sw_->control(ac_->getPower());
+        this->power_sw_->control(false);
     });
 }
 
