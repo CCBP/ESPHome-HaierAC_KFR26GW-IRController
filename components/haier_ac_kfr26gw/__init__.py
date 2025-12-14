@@ -130,48 +130,56 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_SLEEP_SWITCH,
+            default={ CONF_NAME: "Sleep" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_LOCK_SWITCH,
+            default={ CONF_NAME: "Lock" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_DISPLAY_SWITCH,
+            default={ CONF_NAME: "Display" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_AUX_HEATING_SWITCH,
+            default={ CONF_NAME: "Auxiliary Heating" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_SELF_CLEAN_SWITCH,
+            default={ CONF_NAME: "Self Clean" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_TURBO_SWITCH,
+            default={ CONF_NAME: "Turbo" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_QUIET_SWITCH,
+            default={ CONF_NAME: "Quiet" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
         ),
         cv.Optional(
             CONF_HEALTH_SWITCH,
+            default={ CONF_NAME: "Health" }
         ): cv.maybe_simple_value(
             switch.switch_schema(HaierAC160Switch),
             key=CONF_NAME,
@@ -186,6 +194,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_SWING_MODE_SELECT,
+            default={ CONF_NAME: "Swing Mode" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(select_options_invalid(CONF_SWING_MODE_SELECT)),
@@ -193,6 +202,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_FAN_SPEED_SELECT,
+            default={ CONF_NAME: "Fan Speed" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(select_options_invalid(CONF_FAN_SPEED_SELECT)),
@@ -200,6 +210,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_ON_TIMER_HOUR_SELECT,
+            default={ CONF_NAME: "On Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_HOUR_SCHEMA)
@@ -208,6 +219,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_ON_TIMER_MINUTE_SELECT,
+            default={ CONF_NAME: "On Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_MINUTE_SCHEMA)
@@ -216,6 +228,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_OFF_TIMER_HOUR_SELECT,
+            default={ CONF_NAME: "Off Hour" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_HOUR_SCHEMA)
@@ -224,6 +237,7 @@ CONFIG_SCHEMA = cv.All(
         ),
         cv.Optional(
             CONF_OFF_TIMER_MINUTE_SELECT,
+            default={ CONF_NAME: "Off Minute" }
         ): cv.maybe_simple_value(
             select.select_schema(HaierAC160Select)
             .extend(CONFIG_TIMER_MINUTE_SCHEMA)
