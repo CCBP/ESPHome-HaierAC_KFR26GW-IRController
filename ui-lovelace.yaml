@@ -1,0 +1,681 @@
+decluttering_templates:
+  haier_ac160_ctrl_card:
+    card:
+      type: custom:button-card
+      icon: mdi:fan
+      variables:
+        entity_name: '[[entity_name]]'
+        operate_mode: |
+          [[[ return 'select.' + variables.entity_name + '_operate_mode'; ]]]
+        temperature: |
+          [[[ return 'number.' + variables.entity_name + '_temperature'; ]]]
+        power: |
+          [[[ return 'switch.' + variables.entity_name + '_power'; ]]]
+      entity: |
+        [[[ return variables.operate_mode; ]]]
+      name: '[[name]]'
+      label: |
+        [[[
+          const temp = states[variables.temperature];
+          var operate_mode_zh;
+          if (entity.state == 'Auto')
+            operate_mode_zh = '自动';
+          else if (entity.state == 'Heat')
+            operate_mode_zh = '制热';
+          else if (entity.state == 'Cool')
+            operate_mode_zh = '制冷';
+          else if (entity.state == 'Fan')
+            operate_mode_zh = '送风';
+          else if (entity.state == 'Dry')
+            operate_mode_zh = '除湿';
+          return operate_mode_zh;
+        ]]]
+      show_icon: true
+      show_label: true
+      tap_action:
+        action: call-service
+        service: select.select_option
+        service_data:
+          entity_id: |
+            [[[ return variables.operate_mode; ]]]
+          option: |
+            [[[
+              const operate_mode = states[variables.operate_mode];
+              const options = operate_mode.attributes.options;
+              const currentIndex = options.indexOf(operate_mode.state);
+              const nextOption = options[(currentIndex + 1) % options.length];
+              console.log(`The air conditioner operating mode changed from ${operate_mode.state} to ${nextOption}.`);
+              return nextOption;
+            ]]]
+      state:
+        - operator: template
+          value: |
+            [[[ return states[variables.power].state === "off"; ]]]
+          icon: mdi:fan-off
+          spin: false
+          styles:
+            icon:
+              - color: var(--secondary-text-color)
+            label:
+              - color: var(--secondary-text-color)
+            name:
+              - color: var(--secondary-text-color)
+            custom_fields:
+              state:
+                - color: var(--secondary-text-color)
+        - value: Auto
+          spin: ture
+          styles:
+            card:
+              - background: >
+                  linear-gradient(145deg, rgba(127,0,255,1) -30%, 
+                  rgba(255,255,246,1) 50%)
+            icon:
+              - color: '#7F00FF'
+            label:
+              - color: rgba(0,0,0,0.85)
+            name:
+              - color: rgba(0,0,0,0.85)
+            custom_fields:
+              state:
+                - color: rgba(0,0,0,0.85)
+        - value: Cool
+          spin: ture
+          styles:
+            card:
+              - background: >
+                  linear-gradient(145deg, rgba(0,128,255,1) -30%, 
+                  rgba(255,255,246,1) 50%)
+            icon:
+              - color: '#0080FF'
+            label:
+              - color: rgba(0,0,0,0.85)
+            name:
+              - color: rgba(0,0,0,0.85)
+            custom_fields:
+              state:
+                - color: rgba(0,0,0,0.85)
+        - value: Heat
+          spin: true
+          styles:
+            card:
+              - background: >
+                  linear-gradient(145deg, rgba(255,51,51,1) -30%, 
+                  rgba(255,255,246,1) 50%)
+            icon:
+              - color: '#FF3333'
+            label:
+              - color: rgba(0,0,0,0.85)
+            name:
+              - color: rgba(0,0,0,0.85)
+            custom_fields:
+              state:
+                - color: rgba(0,0,0,0.85)
+        - value: Dry
+          spin: ture
+          styles:
+            card:
+              - background: >
+                  linear-gradient(145deg, rgba(255,128,0,1) -30%, 
+                  rgba(255,255,246,1) 50%)
+            icon:
+              - color: '#FF8000'
+            label:
+              - color: rgba(0,0,0,0.85)
+            name:
+              - color: rgba(0,0,0,0.85)
+            custom_fields:
+              state:
+                - color: rgba(0,0,0,0.85)
+        - value: Fan
+          spin: ture
+          styles:
+            card:
+              - background: >
+                  linear-gradient(145deg, rgba(102,204,0,1) -30%, 
+                  rgba(255,255,246,1) 50%)
+            icon:
+              - color: '#66CC00'
+            label:
+              - color: rgba(0,0,0,0.85)
+            name:
+              - color: rgba(0,0,0,0.85)
+            custom_fields:
+              state:
+                - color: rgba(0,0,0,0.85)
+      custom_fields:
+        graph:
+          card:
+            type: custom:mini-graph-card
+            entities:
+              - entity: '[[temp]]'
+                name: Temperature
+              - entity: '[[humi]]'
+                name: Humidity
+                y_axis: secondary
+                show_state: true
+            hours_to_show: 24
+            line_width: 3
+            font_size: 50
+            animate: true
+            height: 60
+            show:
+              name: false
+              icon: false
+              state: true
+              legend: false
+              fill: fade
+            card_mod:
+              style: |
+                ha-card {
+                  background: none;
+                  border: none;
+                }
+                .state--small {
+                  color: var(--ha-color-primary-40) !important;
+                }
+                .state {
+                  color: var(--ha-color-orange-60);
+                }
+        power:
+          card:
+            type: custom:button-card
+            entity: |
+              [[[ return variables.power; ]]]
+            icon: mdi:power
+            show_name: false
+            tap_action:
+              action: toggle
+            styles:
+              grid: null
+              card:
+                - width: 60px
+                - height: 60px
+                - border-radius: 50%
+                - background-color: |
+                    [[[
+                      if (states[variables.power].state === 'on')
+                        if (entity.state === 'Auto') return 'rgba(127,0,255,0.3)';
+                        else if (entity.state === 'Heat') return 'rgba(255,51,51,0.3)';
+                        else if(entity.state === 'Cool') return 'rgba(10,128,25,0.3)';
+                        else if(entity.state === 'Fan') return 'rgba(128,255,0,0.3)';
+                        else if(entity.state === 'Dry') return 'rgba(255,128,0,0.3)';
+
+                      return 'rgba(0,0,0,0)';
+                    ]]]
+              icon:
+                - color: |
+                    [[[
+                      if (states[variables.power].state === 'on')
+                        if (entity.state === 'Auto') return 'purple';
+                        else if (entity.state === 'Heat') return 'red';
+                        else if(entity.state === 'Cool') return 'blue';
+                        else if(entity.state === 'Fan') return 'green';
+                        else if(entity.state === 'Dry') return 'orange';
+
+                      return 'var(--secondary-text-color)';
+                    ]]]
+        mode:
+          card:
+            type: custom:mushroom-chips-card
+            chips:
+              - type: template
+                icon: mdi:autorenew
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: |
+                      [[[ return variables.operate_mode; ]]]
+                    option: Auto
+                icon_color: |
+                  [[[
+                    return ((states[variables.power].state === 'on') && 
+                      (states[variables.operate_mode].state === 'purple ')) ? 'primary' : 'disabled';
+                  ]]]
+                card_mod:
+                  style: |
+                    [[[
+                      if (states[variables.operate_mode].state === 'Auto')
+                        return (states[variables.power].state === 'on') 
+                          ? 'ha-card { --chip-background: rgba(127,0,255,0.3); }'
+                          : 'ha-card { --chip-background: rgba(192,192,192,0.3); }';
+                      else
+                        return 'ha-card { --chip-background: none; }';
+                    ]]]
+              - type: template
+                icon: mdi:fire
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: |
+                      [[[ return variables.operate_mode; ]]]
+                    option: Heat
+                icon_color: |
+                  [[[
+                    return ((states[variables.power].state === 'on') && 
+                      (states[variables.operate_mode].state === 'Heat')) ? 'red' : 'disabled';
+                  ]]]
+                card_mod:
+                  style: |
+                    [[[
+                      if (states[variables.operate_mode].state === 'Heat')
+                        return (states[variables.power].state === 'on') 
+                          ? 'ha-card { --chip-background: rgba(255,51,51,0.3); }'
+                          : 'ha-card { --chip-background: rgba(192,192,192,0.3); }';
+                      else
+                        return 'ha-card { --chip-background: none; }';
+                    ]]]
+              - type: template
+                icon: mdi:snowflake
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: |
+                      [[[ return variables.operate_mode; ]]]
+                    option: Cool
+                icon_color: |
+                  [[[
+                    return ((states[variables.power].state === 'on') && 
+                    (states[variables.operate_mode].state === 'Cool')) ? 'blue' : 'disabled';
+                  ]]]
+                card_mod:
+                  style: |
+                    [[[
+                      if (states[variables.operate_mode].state === 'Cool')
+                        return (states[variables.power].state === 'on') 
+                          ? 'ha-card { --chip-background: rgba(10,128,25,0.3); }'
+                          : 'ha-card { --chip-background: rgba(192,192,192,0.3); }';
+                      else
+                        return 'ha-card { --chip-background: none; }';
+                    ]]]
+              - type: template
+                icon: mdi:water-outline
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: |
+                      [[[ return variables.operate_mode; ]]]
+                    option: Dry
+                icon_color: |
+                  [[[
+                    return ((states[variables.power].state === 'on') && 
+                    (states[variables.operate_mode].state === 'Dry')) ? 'orange' : 'disabled';
+                  ]]]
+                card_mod:
+                  style: |
+                    [[[
+                      if (states[variables.operate_mode].state === 'Dry')
+                        return (states[variables.power].state === 'on') 
+                          ? 'ha-card { --chip-background: rgba(255,128,0,0.3); }'
+                          : 'ha-card { --chip-background: rgba(192,192,192,0.3); }';
+                      else
+                        return 'ha-card { --chip-background: none; }';
+                    ]]]
+              - type: template
+                icon: mdi:weather-windy
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: |
+                      [[[ return variables.operate_mode; ]]]
+                    option: Fan
+                icon_color: |
+                  [[[
+                    return ((states[variables.power].state === 'on') && 
+                    (states[variables.operate_mode].state === 'Fan')) ? 'green' : 'disabled';
+                  ]]]
+                card_mod:
+                  style: |
+                    [[[
+                      if (states[variables.operate_mode].state === 'Fan')
+                        return (states[variables.power].state === 'on') 
+                          ? 'ha-card { --chip-background: rgba(128,255,0,0.3); }'
+                          : 'ha-card { --chip-background: rgba(192,192,192,0.3); }';
+                      else
+                        return 'ha-card { --chip-background: none; }';
+                    ]]]
+        btn_minus:
+          card:
+            type: custom:button-card
+            icon: mdi:minus
+            show_name: false
+            aspect_ratio: 1/1
+            card_mod:
+              style: |
+                ha-card {
+                 background: none;
+                 border: none;
+                }  
+            tap_action:
+              action: call-service
+              service: number.set_value
+              service_data:
+                entity_id: |
+                  [[[ return variables.temperature; ]]]
+                value: |
+                  [[[
+                    const temp = states[variables.temperature];
+                    const step = parseFloat(temp.attributes.step);
+                    const min = parseFloat(temp.attributes.min);
+                    const current = parseFloat(temp.state);
+                    var target = current - step;
+                    if (target < min)
+                      target = min;
+                    return target.toFixed();
+                  ]]]
+            styles:
+              card:
+                - background: none
+              icon:
+                - width: 30px
+                - color: |
+                    [[[ return 'rgba(0,0,0,0.85)'; ]]]
+        btn_plus:
+          card:
+            type: custom:button-card
+            icon: mdi:plus
+            show_name: false
+            aspect_ratio: 1/1
+            card_mod:
+              style: |
+                ha-card {
+                 background: none;
+                 border: none;
+                }  
+            tap_action:
+              action: call-service
+              service: number.set_value
+              service_data:
+                entity_id: |
+                  [[[ return variables.temperature; ]]]
+                value: |
+                  [[[
+                    const temp = states[variables.temperature];
+                    const step = parseFloat(temp.attributes.step);
+                    const max = parseFloat(temp.attributes.max);
+                    const current = parseFloat(temp.state);
+                    var target = current + step;
+                    if (target > max)
+                      target = max;
+                    return target.toFixed();
+                  ]]]
+            styles:
+              card:
+                - background: none
+              icon:
+                - width: 30px
+                - color: |
+                    [[[ return 'rgba(0,0,0,0.85)'; ]]]
+        icon: ''
+        state: >
+          [[[ return parseFloat(states[variables.temperature].state).toFixed() +
+          '°' ]]]
+      styles:
+        card:
+          - border-width: 0px
+          - padding: 15px 0px 0px 0px
+        grid:
+          - grid-template-areas: >-
+              "i n n n power" "i l l l power" "i btn_minus state btn_plus mode"
+              "graph graph graph graph graph"
+          - grid-template-columns: 0.1fr 0.3fr min-content 0.3fr 1.2fr
+          - grid-template-rows: min-content min-content 1fr 1fr
+        img_cell:
+          - width: 64px
+          - height: 64px
+          - padding-left: 15px
+          - justify-self: center
+        name:
+          - justify-self: center
+          - font-size: 26px
+          - font-weight: 300
+        label:
+          - justify-self: center
+          - font-size: 14px
+          - font-weight: 400
+          - text-transform: uppercase
+          - padding: 6px 0 0px 0
+        icon:
+          - width: 100%
+        custom_fields:
+          power:
+            - justify-self: center
+            - margin: 5px 5px 5px 5px
+          mode:
+            - justify-self: end
+            - margin: 0 10px 0 10px
+          state:
+            - font-size: 30px
+            - font-weight: 300
+          graph:
+            - width: 100%
+            - high: 100%
+            - margin: '-16px 0px 0px 0px'
+  haier_ac160_switch_card:
+    card:
+      type: custom:button-card
+      variables:
+        entity_name: '[[entity_name]]'
+        entity_func: '[[entity_func]]'
+        icon: '[[icon]]'
+        off_icon: '[[off_icon]]'
+        power: |
+          [[[ return 'switch.' + variables.entity_name + '_power' ]]]
+      icon: '[[[ return variables.icon; ]]]'
+      name: '[[name]]'
+      entity: >
+        [[[ return 'switch.' + variables.entity_name + '_' +
+        variables.entity_func ]]]
+      tap_action:
+        action: toggle
+      state:
+        - value: 'off'
+          icon: >
+            [[[ return variables.off_icon.startsWith('mdi:')  ?
+            variables.off_icon : variables.icon; ]]]
+      styles:
+        card:
+          - padding: 5px 5px 5px 5px
+          - background: >
+              [[[ if (states[variables.power].state === 'on') return '#FFFFF6';
+              ]]]
+        name:
+          - color: >
+              [[[ return (states[variables.power].state === 'on') ? '#404040' :
+              'var(--secondary-text-color)'; ]]]
+        icon:
+          - color: |
+              [[[
+                if (states[variables.power].state === 'on') {
+                  return (entity.state === 'on') ? '#FF8000' : '#808080';
+                } else
+                  return 'var(--secondary-text-color)';
+              ]]]
+views:
+  - type: sections
+    max_columns: 4
+    title: Dashboard
+    path: unknown
+    sections:
+      - type: grid
+        cards:
+          - type: custom:decluttering-card
+            template: haier_ac160_ctrl_card
+            variables:
+              - entity_name: switch_ac_controller_01
+              - temp: sensor.ble_temperature_a4c138fc7e1f
+              - humi: sensor.ble_humidity_a4c138fc7e1f
+              - name: Haier 空调
+          - square: false
+            type: grid
+            cards:
+              - type: custom:button-card
+                variables:
+                  entity_name: switch_ac_controller_01
+                  power: |
+                    [[[ return 'switch.' + variables.entity_name + '_power' ]]]
+                name: 风速
+                entity: >
+                  [[[ return 'select.' + variables.entity_name + '_fan_speed';
+                  ]]]
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: '[[[ return entity.entity_id; ]]]'
+                    option: |
+                      [[[
+                        const options = entity.attributes.options;
+                        const currentIndex = options.indexOf(entity.state);
+                        const nextOption = options[(currentIndex + 1) % options.length];
+                        console.log(`The air conditioner fan speed changed from ${entity.state} to ${nextOption}.`);
+                        return nextOption;
+                      ]]]
+                state:
+                  - value: Auto
+                    icon: mdi:fan-auto
+                  - value: Low
+                    icon: mdi:fan-chevron-down
+                  - value: Medium
+                    icon: mdi:fan-minus
+                  - value: High
+                    icon: mdi:fan-chevron-up
+                styles:
+                  grid: null
+                  card:
+                    - padding: 5px 5px 5px 5px
+                    - background: >
+                        [[[ if (states[variables.power].state === 'on') return
+                        '#FFFFF6'; ]]]
+                  name:
+                    - color: |
+                        [[[
+                          return (states[variables.power].state === 'on')
+                            ? '#404040' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return states[variables.power].state === 'on'
+                            ? '#FF8000' : 'var(--secondary-text-color)';
+                        ]]]
+              - type: custom:button-card
+                variables:
+                  entity_name: switch_ac_controller_01
+                  power: |
+                    [[[ return 'switch.' + variables.entity_name + '_power' ]]]
+                name: 风向
+                entity: >
+                  [[[ return 'select.' + variables.entity_name + '_swing_mode';
+                  ]]]
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  service_data:
+                    entity_id: '[[[ return entity.entity_id; ]]]'
+                    option: |
+                      [[[
+                        const options = entity.attributes.options;
+                        const currentIndex = options.indexOf(entity.state);
+                        const nextOption = options[(currentIndex + 1) % options.length];
+                        console.log(`The air conditioner swing mode changed from ${entity.state} to ${nextOption}.`);
+                        return nextOption;
+                      ]]]
+                state:
+                  - value: 'Off'
+                    icon: mdi:sync-off
+                    styles:
+                      icon:
+                        - color: '#808080'
+                  - value: Auto
+                    icon: mdi:sync
+                  - value: Top
+                    icon: mdi:arrow-collapse-up
+                  - value: Highest
+                    icon: mdi:arrow-up
+                  - value: High
+                    icon: mdi:arrow-top-right
+                  - value: middle
+                    icon: mdi:arrow-right
+                  - value: Low
+                    icon: mdi:arrow-bottom-right
+                  - value: Lowest
+                    icon: mdi:arrow-down
+                styles:
+                  grid: null
+                  card:
+                    - padding: 5px 5px 5px 5px
+                    - background: >
+                        [[[ if (states[variables.power].state === 'on') return
+                        '#FFFFF6'; ]]]
+                  name:
+                    - color: |
+                        [[[
+                          return (states[variables.power].state === 'on')
+                            ? '#404040' : 'var(--secondary-text-color)';
+                        ]]]
+                  icon:
+                    - color: |
+                        [[[
+                          return states[variables.power].state === 'on'
+                            ? '#FF8000' : 'var(--secondary-text-color)';
+                        ]]]
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:numeric
+                  - off_icon: mdi:numeric-off
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: display
+                  - name: 屏显
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:leaf
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: health
+                  - name: 健康
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:lock-outline
+                  - off_icon: mdi:lock-open-variant-outline
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: lock
+                  - name: 童锁
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:volume-off
+                  - off_icon: mdi:volume-high
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: quiet
+                  - name: 静音
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:sleep
+                  - off_icon: mdi:sleep-off
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: sleep
+                  - name: 睡眠
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:car-turbocharger
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: turbo
+                  - name: 强力
+              - type: custom:decluttering-card
+                template: haier_ac160_switch_card
+                variables:
+                  - icon: mdi:radiator
+                  - off_icon: mdi:radiator-off
+                  - entity_name: switch_ac_controller_01
+                  - entity_func: auxiliary_heating
+                  - name: 辅热
