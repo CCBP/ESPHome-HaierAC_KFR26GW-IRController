@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "esphome/core/log.h"
 #include "esphome/core/helpers.h"
 
 #include "ir_Haier.h"
@@ -36,7 +37,7 @@ enum HaierAC160FanSpeed : uint8_t {
     SPEED_AUTO = kHaierAcYrw02FanAuto,
     SPEED_LOW = kHaierAcYrw02FanLow,
     SPEED_MEDIUM = kHaierAcYrw02FanMed,
-    SPEED_HIGH = kHaierAcYrw02FanAuto,
+    SPEED_HIGH = kHaierAcYrw02FanHigh,
 };
 
 class Converts {

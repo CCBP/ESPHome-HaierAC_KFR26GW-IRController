@@ -358,7 +358,7 @@ void HaierAC160::set_fan_speed_select(HaierAC160Select *fan_speed_se) {
             if (fan_speed.has_value())
                 this->fan_speed_select_handler(*fan_speed);
             else
-                ESP_LOGE(TAG, "Fan Speed '%s' is invalid", fan_speed_str);
+                ESP_LOGE(TAG, "Fan Speed '%s' is invalid", fan_speed_str.c_str());
         }
     );
 }
