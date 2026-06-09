@@ -316,26 +316,26 @@ async def to_code(config):
         ),
         (
             CONF_ON_TIMER_HOUR_SELECT,
-            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
-                generate_timer_options(config[CONF_ON_TIMER_HOUR_SELECT], True),
+            {} if conf not in config else
+                generate_timer_options(config[conf], True),
             var.set_on_timer_hour_select
         ),
         (
             CONF_ON_TIMER_MINUTE_SELECT,
-            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
-                generate_timer_options(config[CONF_ON_TIMER_MINUTE_SELECT], False),
+            {} if conf not in config else
+                generate_timer_options(config[conf], False),
             var.set_on_timer_minute_select
         ),
         (
             CONF_OFF_TIMER_HOUR_SELECT,
-            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
-                generate_timer_options(config[CONF_OFF_TIMER_HOUR_SELECT], True),
+            {} if conf not in config else
+                generate_timer_options(config[conf], True),
             var.set_off_timer_hour_select
         ),
         (
             CONF_OFF_TIMER_MINUTE_SELECT,
-            {} if CONF_ON_TIMER_HOUR_SELECT not in config else 
-                generate_timer_options(config[CONF_OFF_TIMER_MINUTE_SELECT], False),
+            {} if conf not in config else
+                generate_timer_options(config[conf], False),
             var.set_off_timer_minute_select
         ),
     ]:
