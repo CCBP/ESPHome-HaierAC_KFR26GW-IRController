@@ -18,7 +18,7 @@ class HaierAC160 : public Component, public EntityBase {
     public:
         HaierAC160() {}
 
-        void init(uint16_t pin, const bool recovery = true,
+        void init(uint16_t pin, const bool restore_state = true,
             const bool inverted = false);
 
         bool restore_state_();
@@ -64,13 +64,13 @@ class HaierAC160 : public Component, public EntityBase {
         HaierAC160Select *operate_mode_se_{nullptr};
         HaierAC160Select *fan_speed_se_{nullptr};
         HaierAC160Select *swing_mode_se_{nullptr};
-        uint8_t on_timer_hour_num{0};
+        uint8_t on_timer_hour_num_{0};
         HaierAC160Select *on_timer_hour_se_{nullptr};
-        uint8_t on_timer_minute_num{0};
+        uint8_t on_timer_minute_num_{0};
         HaierAC160Select *on_timer_minute_se_{nullptr};
-        uint8_t off_timer_hour_num{0};
+        uint8_t off_timer_hour_num_{0};
         HaierAC160Select *off_timer_hour_se_{nullptr};
-        uint8_t off_timer_minute_num{0};
+        uint8_t off_timer_minute_num_{0};
         HaierAC160Select *off_timer_minute_se_{nullptr};
 
         void temperature_number_handler(uint8_t temp);

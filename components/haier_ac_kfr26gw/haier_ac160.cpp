@@ -13,11 +13,11 @@ static const uint32_t RESTORE_STATE_VERSION = 0xB01E7FA4UL;
 static const std::string TIMER_OFF_STR = "--";
 
 void HaierAC160::init(uint16_t pin,
-        const bool need_restore, const bool inverted) {
+        const bool restore_state, const bool inverted) {
     ac_ = std::make_unique<IRHaierAC160>(pin, inverted);
     ac_->begin();
 
-    this->need_restore_ = need_restore;
+    this->need_restore_ = restore_state;
     if (!this->need_restore_ || !this->restore_state_()) {
         ESP_LOGW(TAG,
             "Since restore is %s, the default settings were used.",
@@ -367,8 +367,8 @@ void HaierAC160::set_fan_speed_select(HaierAC160Select *fan_speed_se) {
 
 void HaierAC160::disable_on_timer() {
     ac_->setOnTimer(0);
-    this->on_timer_hour_num = 0;
-    this->on_timer_minute_num = 0;
+    this->on_timer_hour_num_ = 0;
+    this->on_timer_minute_num_ = 0;
     this->on_timer_hour_se_->make_call()
         .with_index(0).perform();
     this->on_timer_minute_se_->make_call()
@@ -377,7 +377,7 @@ void HaierAC160::disable_on_timer() {
 
 void HaierAC160::on_timer_select_handler() {
     ESP_LOGD(TAG, "On Timer wae select as %02d:%02d.",
-            this->on_timer_hour_num, this->on_timer_minute_num);
+            this->on_timer_hour_num_, this->on_timer_minute_num_);
 
     if ((ac_->getPower() == true) &&
         (ac_->getTimerMode() != kHaierAcYrw02OffTimer) &&
@@ -386,8 +386,8 @@ void HaierAC160::on_timer_select_handler() {
         this->disable_on_timer();
         return;
     }
-    uint16_t total_mins = this->on_timer_hour_num * 60 +
-        this->on_timer_minute_num;
+    uint16_t total_mins = this->on_timer_hour_num_ * 60 +
+        this->on_timer_minute_num_;
     ESP_LOGW(TAG, "The AC will turn on in %d minutes.",
             total_mins);
 
@@ -410,9 +410,9 @@ void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
                 "On Timer Hour was selected as %s", hour_str.c_str());
 
             if (hour_str == TIMER_OFF_STR) {
-                this->on_timer_hour_num = 0;
+                this->on_timer_hour_num_ = 0;
             } else {
-                this->on_timer_hour_num = std::stoi(hour_str);
+                this->on_timer_hour_num_ = std::stoi(hour_str);
                 this->on_timer_select_handler();
             }
         }
@@ -427,9 +427,9 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
                 "On Timer Minute was selected as %s", min_str.c_str());
 
             if (min_str == TIMER_OFF_STR) {
-                this->on_timer_minute_num = 0;
+                this->on_timer_minute_num_ = 0;
             } else {
-                this->on_timer_minute_num = std::stoi(min_str);
+                this->on_timer_minute_num_ = std::stoi(min_str);
                 this->on_timer_select_handler();
             }
         }
@@ -438,8 +438,8 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
 
 void HaierAC160::disable_off_timer() {
     ac_->setOffTimer(0);
-    this->off_timer_hour_num = 0;
-    this->off_timer_minute_num = 0;
+    this->off_timer_hour_num_ = 0;
+    this->off_timer_minute_num_ = 0;
     this->off_timer_hour_se_->make_call()
         .with_index(0).perform();
     this->off_timer_minute_se_->make_call()
@@ -448,7 +448,7 @@ void HaierAC160::disable_off_timer() {
 
 void HaierAC160::off_timer_select_handler() {
     ESP_LOGD(TAG, "Off Timer wae select as %02d:%02d.",
-            this->off_timer_hour_num, this->off_timer_minute_num);
+            this->off_timer_hour_num_, this->off_timer_minute_num_);
 
     if ((ac_->getPower() == false) &&
         (ac_->getTimerMode() != kHaierAcYrw02OnTimer) &&
@@ -457,8 +457,8 @@ void HaierAC160::off_timer_select_handler() {
         this->disable_off_timer();
         return;
     }
-    uint16_t total_mins = this->off_timer_hour_num * 60 +
-        this->off_timer_minute_num;
+    uint16_t total_mins = this->off_timer_hour_num_ * 60 +
+        this->off_timer_minute_num_;
     ESP_LOGW(TAG, "The AC will turn off in %d minutes.",
             total_mins);
 
@@ -480,9 +480,9 @@ void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) 
             ESP_LOGD(TAG, "Off Timer Hour was selected as %s", hour_str.c_str());
 
             if (hour_str == TIMER_OFF_STR) {
-                this->off_timer_hour_num = 0;
+                this->off_timer_hour_num_ = 0;
             } else {
-                this->off_timer_hour_num = std::stoi(hour_str);
+                this->off_timer_hour_num_ = std::stoi(hour_str);
                 this->off_timer_select_handler();
             }
         }
@@ -496,9 +496,9 @@ void HaierAC160::set_off_timer_minute_select(HaierAC160Select *off_timer_minute_
             ESP_LOGD(TAG, "Off Timer Minute was selected as %s", min_str.c_str());
 
             if (min_str == TIMER_OFF_STR) {
-                this->off_timer_minute_num = 0;
+                this->off_timer_minute_num_ = 0;
             } else {
-                this->off_timer_minute_num = std::stoi(min_str);
+                this->off_timer_minute_num_ = std::stoi(min_str);
                 this->off_timer_select_handler();
             }
         }
