@@ -293,10 +293,12 @@ void HaierAC160::disable_on_timer() {
     ac_->setOnTimer(0);
     this->on_timer_hour_num_ = 0;
     this->on_timer_minute_num_ = 0;
-    this->on_timer_hour_se_->make_call()
-        .with_index(0).perform();
-    this->on_timer_minute_se_->make_call()
-        .with_index(0).perform();
+    if (this->on_timer_hour_se_ != nullptr)
+        this->on_timer_hour_se_->make_call()
+            .with_index(0).perform();
+    if (this->on_timer_minute_se_ != nullptr)
+        this->on_timer_minute_se_->make_call()
+            .with_index(0).perform();
 }
 
 void HaierAC160::on_timer_select_handler() {
@@ -337,6 +339,7 @@ void HaierAC160::set_on_timer_hour_select(HaierAC160Select *on_timer_hour_se) {
                 this->on_timer_hour_num_ = 0;
             } else {
                 this->on_timer_hour_num_ = std::stoi(hour_str);
+                if (this->on_timer_hour_num_ == 0) return;
                 this->on_timer_select_handler();
             }
         }
@@ -354,6 +357,7 @@ void HaierAC160::set_on_timer_minute_select(HaierAC160Select *on_timer_minute_se
                 this->on_timer_minute_num_ = 0;
             } else {
                 this->on_timer_minute_num_ = std::stoi(min_str);
+                if (this->on_timer_minute_num_ == 0) return;
                 this->on_timer_select_handler();
             }
         }
@@ -364,10 +368,12 @@ void HaierAC160::disable_off_timer() {
     ac_->setOffTimer(0);
     this->off_timer_hour_num_ = 0;
     this->off_timer_minute_num_ = 0;
-    this->off_timer_hour_se_->make_call()
-        .with_index(0).perform();
-    this->off_timer_minute_se_->make_call()
-        .with_index(0).perform();
+    if (this->off_timer_hour_se_ != nullptr)
+        this->off_timer_hour_se_->make_call()
+            .with_index(0).perform();
+    if (this->off_timer_minute_se_ != nullptr)
+        this->off_timer_minute_se_->make_call()
+            .with_index(0).perform();
 }
 
 void HaierAC160::off_timer_select_handler() {
@@ -407,6 +413,7 @@ void HaierAC160::set_off_timer_hour_select(HaierAC160Select *off_timer_hour_se) 
                 this->off_timer_hour_num_ = 0;
             } else {
                 this->off_timer_hour_num_ = std::stoi(hour_str);
+                if (this->off_timer_hour_num_ == 0) return;
                 this->off_timer_select_handler();
             }
         }
@@ -423,6 +430,7 @@ void HaierAC160::set_off_timer_minute_select(HaierAC160Select *off_timer_minute_
                 this->off_timer_minute_num_ = 0;
             } else {
                 this->off_timer_minute_num_ = std::stoi(min_str);
+                if (this->off_timer_minute_num_ == 0) return;
                 this->off_timer_select_handler();
             }
         }
