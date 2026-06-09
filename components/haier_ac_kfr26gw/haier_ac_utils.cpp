@@ -19,4 +19,4 @@ void HaierAC160Select::control(const std::string &value) {
 };
 
 } // namespace esphome
-} // namespace haier_ac_160
+} // namespace haier_ac160

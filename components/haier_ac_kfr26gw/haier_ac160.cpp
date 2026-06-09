@@ -371,7 +371,7 @@ void HaierAC160::disable_on_timer() {
         .with_index(0).perform();
     this->on_timer_minute_se_->make_call()
         .with_index(0).perform();
-};
+}
 
 void HaierAC160::on_timer_select_handler() {
     ESP_LOGD(TAG, "On Timer wae select as %02d:%02d.",
@@ -442,7 +442,7 @@ void HaierAC160::disable_off_timer() {
         .with_index(0).perform();
     this->off_timer_minute_se_->make_call()
         .with_index(0).perform();
-};
+}
 
 void HaierAC160::off_timer_select_handler() {
     ESP_LOGD(TAG, "Off Timer wae select as %02d:%02d.",
