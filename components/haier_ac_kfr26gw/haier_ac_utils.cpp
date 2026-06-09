@@ -3,19 +3,33 @@
 namespace esphome {
 namespace haier_ac160 {
 
-void HaierAC160Number::control(float value) {
-    this->publish_state(value);
-    if (this->cb_) this->cb_(value);
-}
+std::map<HaierAC160OperateMode, std::string>
+Converts::OPERATE_MODE_STR = {
+    { MODE_AUTO, "Auto" },
+    { MODE_COOL, "Cool" },
+    { MODE_HEAT, "Heat" },
+    { MODE_DRY, "Dry" },
+    { MODE_FAN, "Fan" },
+};
 
-void HaierAC160Switch::write_state(bool state) {
-    this->publish_state(state);
-    if (this->cb_) this->cb_(state);
-}
+std::map<HaierAC160SwingMode, std::string>
+Converts::SWING_MODE_STR = {
+    { SWING_OFF, "Off" },
+    { SWING_AUTO, "Auto" },
+    { SWING_TOP, "Top" },
+    { SWING_HIGHEST, "Highest" },
+    { SWING_HIGH, "High" },
+    { SWING_MIDDLE, "Middle" },
+    { SWING_LOW, "Low" },
+    { SWING_LOWEST, "Lowest" },
+};
 
-void HaierAC160Select::control(const std::string &value) {
-    this->publish_state(value);
-    if (this->cb_) this->cb_(value);
+std::map<HaierAC160FanSpeed, std::string>
+Converts::FAN_SPEED_STR = {
+    { SPEED_AUTO, "Auto" },
+    { SPEED_LOW, "Low" },
+    { SPEED_MEDIUM, "Medium" },
+    { SPEED_HIGH, "High" },
 };
 
 } // namespace esphome
