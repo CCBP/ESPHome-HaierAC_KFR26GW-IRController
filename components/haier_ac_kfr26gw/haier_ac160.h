@@ -22,6 +22,7 @@ class HaierAC160 : public Component, public EntityBase {
             const bool inverted = false);
 
         bool restore_state_();
+        void sync_entities_();
         void perform(bool ignore_power = false);
 
         void set_temperature_number(HaierAC160Number *temperature_nu);

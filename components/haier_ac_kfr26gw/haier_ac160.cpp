@@ -24,6 +24,14 @@ void HaierAC160::init(uint16_t pin,
             this->need_restore_ ? "failed" : "disabled");
         ac_->stateReset();
     }
+
+    this->sync_entities_();
+
+    ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
+    ESP_LOGD(TAG, "  %s\n", ac_->toString().c_str());
+}
+
+void HaierAC160::sync_entities_() {
     this->temperature_nu_->make_call()
         .set_value(ac_->getTemp()).perform();
     this->power_sw_->control(ac_->getPower());
@@ -59,9 +67,6 @@ void HaierAC160::init(uint16_t pin,
         .with_index(0).perform();
     this->off_timer_minute_se_->make_call()
         .with_index(0).perform();
-
-    ESP_LOGD(TAG, "Haier A/C remote is in the following state:");
-    ESP_LOGD(TAG, "  %s\n", ac_->toString().c_str());
 }
 
 bool HaierAC160::restore_state_() {
