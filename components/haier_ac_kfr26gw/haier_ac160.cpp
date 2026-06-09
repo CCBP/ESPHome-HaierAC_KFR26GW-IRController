@@ -1,5 +1,7 @@
 #include "haier_ac160.h"
 
+#include <memory>
+
 namespace esphome {
 namespace haier_ac160 {
 
@@ -12,7 +14,7 @@ static const std::string TIMER_OFF_STR = "--";
 
 void HaierAC160::init(uint16_t pin,
         const bool need_restore, const bool inverted) {
-    ac_ = new IRHaierAC160(pin, inverted);
+    ac_ = std::make_unique<IRHaierAC160>(pin, inverted);
     ac_->begin();
 
     this->need_restore_ = need_restore;

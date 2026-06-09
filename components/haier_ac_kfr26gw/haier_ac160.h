@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "esphome/core/component.h"
 #include "esphome/core/preferences.h"
 #include "esphome/core/log.h"
@@ -43,7 +45,7 @@ class HaierAC160 : public Component, public EntityBase {
         void set_off_timer_minute_select(HaierAC160Select *off_timer_minute_se);
 
     protected:
-        IRHaierAC160 *ac_{nullptr};
+        std::unique_ptr<IRHaierAC160> ac_;
         ESPPreferenceObject rtc_;
         bool need_restore_{false};
 
