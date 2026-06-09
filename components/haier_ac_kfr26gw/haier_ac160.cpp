@@ -119,6 +119,21 @@ void HaierAC160::set_temperature_number(HaierAC160Number *temperature_nu) {
     );
 }
 
+void HaierAC160::set_switch_(HaierAC160Switch *sw, const char *name,
+        BoolGetter getter, BoolSetter setter, bool ignore_power) {
+    sw->set_callback_handler(
+        [this, name, getter, setter, ignore_power](bool state) -> void {
+            ESP_LOGD(TAG, "%s switch state changed to %s",
+                name, state ? "ON" : "OFF");
+
+            if (state != getter()) {
+                setter(state);
+                this->perform(ignore_power);
+            }
+        }
+    );
+}
+
 void HaierAC160::power_switch_handler(bool state) {
     ESP_LOGD(TAG, "Power switch state changed to %s",
         state ? "ON" : "OFF");
@@ -145,157 +160,61 @@ void HaierAC160::set_power_switch(HaierAC160Switch *power_sw) {
     );
 }
 
-void HaierAC160::sleep_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Sleep switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getSleep()) {
-        ac_->setSleep(state);
-        this->perform();
-    }
-}
-
 void HaierAC160::set_sleep_switch(HaierAC160Switch *sleep_sw) {
     this->sleep_sw_ = sleep_sw;
-    this->sleep_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->sleep_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::lock_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Lock switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getLock()) {
-        ac_->setLock(state);
-        this->perform();
-    }
+    this->set_switch_(sleep_sw, "Sleep",
+        [this]() { return ac_->getSleep(); },
+        [this](bool v) { ac_->setSleep(v); });
 }
 
 void HaierAC160::set_lock_switch(HaierAC160Switch *lock_sw) {
     this->lock_sw_ = lock_sw;
-    this->lock_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->lock_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::display_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Display switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getLightToggle()) {
-        ac_->setLightToggle(state);
-        this->perform();
-    }
+    this->set_switch_(lock_sw, "Lock",
+        [this]() { return ac_->getLock(); },
+        [this](bool v) { ac_->setLock(v); });
 }
 
 void HaierAC160::set_display_switch(HaierAC160Switch *display_sw) {
     this->display_sw_ = display_sw;
-    this->display_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->display_switch_handler(state);
-        }
-    );
+    // getLightToggle()/setLightToggle() controls the AC display on/off
+    this->set_switch_(display_sw, "Display",
+        [this]() { return ac_->getLightToggle(); },
+        [this](bool v) { ac_->setLightToggle(v); });
 }
 
-void HaierAC160::aux_heating_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Auxiliary Heating switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getAuxHeating()) {
-        ac_->setAuxHeating(state);
-        this->perform();
-    }
-}
-
-void HaierAC160::set_aux_heating_switch(
-        HaierAC160Switch *aux_heating_sw) {
+void HaierAC160::set_aux_heating_switch(HaierAC160Switch *aux_heating_sw) {
     this->aux_heating_sw_ = aux_heating_sw;
-    this->aux_heating_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->aux_heating_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::self_clean_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Self Clean switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getClean()) {
-        ac_->setClean(state);
-        this->perform();
-    }
+    this->set_switch_(aux_heating_sw, "Auxiliary Heating",
+        [this]() { return ac_->getAuxHeating(); },
+        [this](bool v) { ac_->setAuxHeating(v); });
 }
 
 void HaierAC160::set_self_clean_switch(HaierAC160Switch *self_clean_sw) {
     this->self_clean_sw_ = self_clean_sw;
-    this->self_clean_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->self_clean_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::turbo_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Turbo switch state changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getTurbo()) {
-        ac_->setTurbo(state);
-        this->perform();
-    }
+    this->set_switch_(self_clean_sw, "Self Clean",
+        [this]() { return ac_->getClean(); },
+        [this](bool v) { ac_->setClean(v); });
 }
 
 void HaierAC160::set_turbo_switch(HaierAC160Switch *turbo_sw) {
     this->turbo_sw_ = turbo_sw;
-    this->turbo_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->turbo_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::quiet_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Quiet switch changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getQuiet()) {
-        ac_->setQuiet(state);
-        this->perform();
-    }
+    this->set_switch_(turbo_sw, "Turbo",
+        [this]() { return ac_->getTurbo(); },
+        [this](bool v) { ac_->setTurbo(v); });
 }
 
 void HaierAC160::set_quiet_switch(HaierAC160Switch *quiet_sw) {
     this->quiet_sw_ = quiet_sw;
-    this->quiet_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->quiet_switch_handler(state);
-        }
-    );
-}
-
-void HaierAC160::health_switch_handler(bool state) {
-    ESP_LOGD(TAG, "Health switch changed to %s",
-        state ? "ON" : "OFF");
-
-    if (state != ac_->getHealth()) {
-        ac_->setHealth(state);
-        this->perform();
-    }
+    this->set_switch_(quiet_sw, "Quiet",
+        [this]() { return ac_->getQuiet(); },
+        [this](bool v) { ac_->setQuiet(v); });
 }
 
 void HaierAC160::set_health_switch(HaierAC160Switch *health_sw) {
     this->health_sw_ = health_sw;
-    this->health_sw_->set_callback_handler(
-        [this](bool state) -> void {
-            this->health_switch_handler(state);
-        }
-    );
+    this->set_switch_(health_sw, "Health",
+        [this]() { return ac_->getHealth(); },
+        [this](bool v) { ac_->setHealth(v); });
 }
 
 void HaierAC160::operate_mode_select_handler(

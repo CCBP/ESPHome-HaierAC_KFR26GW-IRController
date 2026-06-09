@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "esphome/core/component.h"
@@ -36,6 +37,9 @@ class HaierAC160 : public Component, public EntityBase {
         void set_turbo_switch(HaierAC160Switch *turbo_sw);
         void set_quiet_switch(HaierAC160Switch *quiet_sw);
         void set_health_switch(HaierAC160Switch *health_sw);
+
+        using BoolGetter = std::function<bool()>;
+        using BoolSetter = std::function<void(bool)>;
 
         void set_operate_mode_select(HaierAC160Select *operate_mode_se_);
         void set_swing_mode_select(HaierAC160Select *swing_mode_se);
@@ -76,15 +80,10 @@ class HaierAC160 : public Component, public EntityBase {
 
         void temperature_number_handler(uint8_t temp);
 
+        void set_switch_(HaierAC160Switch *sw, const char *name,
+            BoolGetter getter, BoolSetter setter,
+            bool ignore_power = false);
         void power_switch_handler(bool state);
-        void sleep_switch_handler(bool state);
-        void lock_switch_handler(bool state);
-        void display_switch_handler(bool state);
-        void aux_heating_switch_handler(bool state);
-        void self_clean_switch_handler(bool state);
-        void turbo_switch_handler(bool state);
-        void quiet_switch_handler(bool state);
-        void health_switch_handler(bool state);
 
         void operate_mode_select_handler(HaierAC160OperateMode op_mode);
         void swing_mode_select_handler(HaierAC160SwingMode swing_mode);
